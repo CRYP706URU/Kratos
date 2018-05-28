@@ -167,7 +167,7 @@ class FemDemMechanicalSolver(object):
 
         for variable in self.nodal_variables:            
             self.main_model_part.AddNodalSolutionStepVariable(KratosMultiphysics.KratosGlobals.GetVariable(variable))
-            print(" Added variable ", KratosMultiphysics.KratosGlobals.GetVariable(variable),"(",variable,")")
+            #print(" Added variable ", KratosMultiphysics.KratosGlobals.GetVariable(variable),"(",variable,")")
             
         print("::[Mechanical_Solver]:: General Variables ADDED")
                                                               

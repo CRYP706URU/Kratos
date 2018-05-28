@@ -71,8 +71,6 @@ class FEM_Solution(MainSolidFEM.Solution):
 		self.start_time = self.ProjectParameters["problem_data"]["start_time"].GetDouble()
 		self.end_time   = self.ProjectParameters["problem_data"]["end_time"  ].GetDouble()
 
-
-		#self.main_model_part.ProcessInfo.SetValue(KratosMultiphysics.DIMENSION, self.ProjectParameters["problem_data"]["dimension"].GetInt())
 		self.main_model_part.ProcessInfo.SetValue(KratosMultiphysics.DOMAIN_SIZE, self.ProjectParameters["problem_data"]["domain_size"].GetInt())
 		self.main_model_part.ProcessInfo.SetValue(KratosMultiphysics.DELTA_TIME, self.time_step)
 		self.main_model_part.ProcessInfo.SetValue(KratosMultiphysics.TIME, self.start_time)
@@ -192,7 +190,6 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 		## Sets strategies, builders, linear solvers, schemes and solving info, and fills the buffer
 		self.solver.Initialize()
-		#self.solver.InitializeStrategy()
 		self.solver.SetEchoLevel(self.echo_level)
 
 		
@@ -265,6 +262,23 @@ class FEM_Solution(MainSolidFEM.Solution):
 		neighbour_elemental_finder =  KratosMultiphysics.FindElementalNeighboursProcess(self.main_model_part, 2, 5)
 		neighbour_elemental_finder.Execute()
 
+		# Search the skin nodes for the remeshing
+		skin_detection_process_param = KratosMultiphysics.Parameters("""
+        {
+			"name_auxiliar_model_part" : "SkinDEMModelPart",
+			"name_auxiliar_condition"  : "Condition",
+			"echo_level"               : 0
+        }""")
+
+		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part, skin_detection_process_param)
+		skin_detection_process.Execute()
+		#print(self.main_model_part.GetSubModelPart("SkinDEMModelPart"))
+		#for node in self.main_model_part.GetSubModelPart("SkinDEMModelPart").Nodes:
+		#	print(node.Id)
+		#print("skin process executed")
+		#Wait()
+
+
 		self.delta_time = self.main_model_part.ProcessInfo[KratosMultiphysics.DELTA_TIME]
 
 		self.time = self.time + self.delta_time
@@ -308,8 +322,6 @@ class FEM_Solution(MainSolidFEM.Solution):
 		# processes to be executed after witting the output
 		self.model_processes.ExecuteAfterOutputStep()
 
-		# Eliminates elements from the mesh with damage > 0.98
-		#self.main_model_part.RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
 
 		if(self.activate_AMR):
 			self.refine, self.last_mesh = self.AMR_util.CheckAMR(self.time)
@@ -345,6 +357,8 @@ class FEM_Solution(MainSolidFEM.Solution):
 				#self.GraphicalOutputPrintOutput()	
 			elif(self.last_mesh):
 				self.AMR_util.Finalize(self.main_model_part, self.current_id)
+
+
 
 
 #============================================================================================================================
@@ -427,36 +441,12 @@ class FEM_Solution(MainSolidFEM.Solution):
 	def InitializeAfterAMR(self):
 
 		#### INITIALIZE ####
-		"""
-		# Add variables (always before importing the model part)
-		self.solver.AddVariables()
-		print("en main antes de import:", self.main_model_part.ProcessInfo[KratosMultiphysics.STEP])
-		# Read model_part (note: the buffer_size is set here) (restart is read here)
-		self.solver.ImportModelPart()
-		print("en main despeus de import:", self.main_model_part.ProcessInfo[KratosMultiphysics.STEP])
-
-		# Add dofs (always after importing the model part)
-		if((self.main_model_part.ProcessInfo).Has(KratosMultiphysics.IS_RESTARTED)):
-			if(self.main_model_part.ProcessInfo[KratosMultiphysics.IS_RESTARTED] == False):
-				self.solver.AddDofs()
-		else:
-			self.solver.AddDofs()
-
-		"""
-		# Add materials (assign material to model_parts if Materials.json exists)
-		#self.AddMaterials()
-		
-
 		# Add processes
 		self.model_processes = self.AddProcesses()
 		self.model_processes.ExecuteInitialize()
 
-
-
 		#### START SOLUTION ####
-
 		self.computing_model_part = self.solver.GetComputingModelPart()
-
 		## Sets strategies, builders, linear solvers, schemes and solving info, and fills the buffer
 		self.solver.Initialize()
 		#self.solver.InitializeStrategy()
@@ -465,71 +455,15 @@ class FEM_Solution(MainSolidFEM.Solution):
 		
 		# Initialize GiD  I/O (gid outputs, file_lists)
 		self.SetGraphicalOutput()
-		#print("stepppp2 :", self.main_model_part.ProcessInfo[KratosMultiphysics.STEP])
 		self.GraphicalOutputExecuteInitialize()
-		#print("stepppp3 :", self.main_model_part.ProcessInfo[KratosMultiphysics.STEP])
-
-
-		#print(" ")
-		#print("::[KSM Simulation]:: Analysis -START- ")
-
-		#self.model_processes.ExecuteBeforeSolutionLoop()
-
 		self.GraphicalOutputExecuteBeforeSolutionLoop()		
 
-		# Set time settings
-		#self.step	   = self.main_model_part.ProcessInfo[KratosMultiphysics.STEP]
-		#self.time	   = self.main_model_part.ProcessInfo[KratosMultiphysics.TIME]
-
-		#self.end_time   = self.ProjectParameters["problem_data"]["end_time"].GetDouble()
-		#self.delta_time = self.ProjectParameters["problem_data"]["time_step"].GetDouble()
-
-
-		###   ------  Initializing Adaptive Mesh Refinement  ----------####
-		#self.cleaning_util = cleaning_utility.CleaningUtility(self.problem_path)
-
-		#self.gid_output_util = gid_output_utility.GidOutputUtility(self.ProjectParameters,
-			                                                       #self.problem_name,
-			                                                       #self.start_time,
-			                                                      # self.end_time,
-			                                                       #self.delta_time)
-
-		#self.constitutive_law_utility = []  # must be changed->provisional TODO
-		#self.conditions_util = []
-
-
-
-		#self.activate_AMR = self.ProjectParameters["AMR_data"]["activate_AMR"].GetBool()
-		#self.current_id = 1
-
-
-		# Initialize the AMR_util
-		#if(self.activate_AMR):
-			#self.AMR_util = adaptive_mesh_refinement_utility.AdaptiveMeshRefinementUtility(self.ProjectParameters,
-				                                                                          # self.start_time,
-				                                                                           #self.solver,
-				                                                                          # self.constitutive_law_utility,
-				                                                                           #gid_output_utility,
-				                                                                           #self.conditions_util,
-				                                                                           #self.problem_path)
-			#self.activate_AMR = self.AMR_util.Initialize() # check the amr criteria
-			#print("point alex 223333", self.activate_AMR)
-			#Wait()
+		
 
 
 
 if __name__ == "__main__": 
 	Solution().Run()
-
-
-#============================================================================================================================
-#============================================================================================================================
-# Main de DEM application
-
-#class DEM_Solution(MainDEM.Solution):
-
-    #def Info(self):
-        #print("DEM part of the FEM-DEM application")
 
 
 

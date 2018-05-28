@@ -26,10 +26,10 @@ class FEMDEM_Solution:
 		self.DEM_Solution = DEM.DEM_for_coupling_Solution()
 
 		# Initialize Remeshing files
-		self.DoRemeshing = True # hard coded
+		self.DoRemeshing = self.FEM_Solution.ProjectParameters["AMR_data"]["activate_AMR"].GetBool() 
 		if self.DoRemeshing:
-			mmg_parameter_file = open("MMGParameters.json",'r')
-			self.mmg_parameters = KratosMultiphysics.Parameters(mmg_parameter_file.read())
+			self.mmg_parameter_file = open("MMGParameters.json",'r')
+			self.mmg_parameters = KratosMultiphysics.Parameters(self.mmg_parameter_file.read())
 			Model = {self.mmg_parameters["model_part_name"].GetString(): self.FEM_Solution.main_model_part}
 			self.RemeshingProcessMMG = MMG.MmgProcess(Model, self.mmg_parameters)
 
@@ -82,13 +82,20 @@ class FEMDEM_Solution:
 #============================================================================================================================
 	def InitializeSolutionStep(self):
 
+		is_remeshing = self.CheckIfHasRemeshed()
+		
+		if is_remeshing:
+			# Remove DEMS from previous mesh
+			self.SpheresModelPart.Elements.clear()
+			self.SpheresModelPart.Nodes.clear()
+			
 		if self.DoRemeshing:
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
 		self.FEM_Solution.InitializeSolutionStep()
 
 		# just for testing ->Remove
-		#self.FEM_Solution.GraphicalOutputPrintOutput()
+		self.FEM_Solution.GraphicalOutputPrintOutput()
 		# ***********************
 
 #============================================================================================================================
@@ -158,7 +165,6 @@ class FEMDEM_Solution:
 
 #============================================================================================================================
 	def FinalizeSolutionStep(self):
-		#self.FEM_Solution.FinalizeSolutionStep()
 
 		# MODIFIED FOR THE REMESHING
 		self.FEM_Solution.GraphicalOutputExecuteFinalizeSolutionStep()
@@ -177,6 +183,10 @@ class FEMDEM_Solution:
 
 		if self.DoRemeshing:
 			self.RemeshingProcessMMG.ExecuteFinalizeSolutionStep()
+
+		# Remove the submodel to be recomputed at each dt
+		self.FEM_Solution.main_model_part.RemoveSubModelPart("SkinDEMModelPart")
+
 		
 
 #============================================================================================================================
@@ -550,7 +560,7 @@ class FEMDEM_Solution:
 
 		FEM_Elements = self.FEM_Solution.main_model_part.Elements
 		FEM_Nodes    = self.FEM_Solution.main_model_part.Nodes
-		DEM_Nodes    = self.SpheresModelPart
+		#DEM_Nodes    = self.SpheresModelPart
 
 		for Element in FEM_Elements:
 
@@ -773,3 +783,28 @@ class FEMDEM_Solution:
 		for node in self.FEM_Solution.main_model_part.Nodes:
 			node.SetValue(MeshingApplication.MMG_METRIC, ZeroVector3)
 			node.SetValue(MeshingApplication.AUXILIAR_GRADIENT, ZeroVector3)
+
+#============================================================================================================================
+
+	def GenerateDemAfterRemeshing(self):
+		pass
+
+	
+#============================================================================================================================		
+
+	def CheckIfHasRemeshed(self):
+
+		is_remeshed = False
+
+		if (self.RemeshingProcessMMG.initial_remeshing == False):
+			step = self.RemeshingProcessMMG.step + 1
+			# We need to check if the model part has been modified recently
+			if self.RemeshingProcessMMG.step_frequency > 0:
+				if step >= self.RemeshingProcessMMG.step_frequency:
+					if self.RemeshingProcessMMG.model_part.ProcessInfo[KratosMultiphysics.STEP] >= self.RemeshingProcessMMG.initial_step:
+						# Has remeshed
+						is_remeshed = True
+
+		return is_remeshed
+
+
