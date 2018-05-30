@@ -89,7 +89,6 @@ namespace Kratos
 		{
 			this->ComputeEdgeNeighbours(rCurrentProcessInfo); 
 			this->CalculateLchar(); 
-			
 			this->IterationPlus();
 		}
 	}
@@ -353,10 +352,8 @@ namespace Kratos
 
 				this->CalculateDeformationMatrix(B, DN_DX);
 				this->SetBMatrix(B);
-
 			}
 		}
-		
 		KRATOS_CATCH("")
 	}
 
@@ -415,7 +412,7 @@ namespace Kratos
 				this->CalculateAverageStrainOnEdge(AverageStrainVector, EdgeNeighbours);
 
 				double DamageEdge = 0.0; 
-				double Lchar = this->Get_l_char(edge);
+				const double Lchar = this->Get_l_char(edge);
 				this->IntegrateStressDamageMechanics(IntegratedStressVectorOnEdge, DamageEdge,
 					AverageStrainVector, AverageStressVector, edge, Lchar );
 				
@@ -429,15 +426,15 @@ namespace Kratos
 			this->Set_NonConvergeddamage(damage_element);
 			
 			const Vector& StressVector = this->GetValue(STRESS_VECTOR);
-			IntegratedStressVector = (1 - damage_element)*StressVector;
+			IntegratedStressVector = (1.0 - damage_element)*StressVector;
 			this->SetIntegratedStressVector(IntegratedStressVector);
 
 			Matrix ConstitutiveMatrix = ZeroMatrix(voigt_size, voigt_size);
-			double E  = this->GetProperties()[YOUNG_MODULUS];
-			double nu = this->GetProperties()[POISSON_RATIO];
+			const double E  = this->GetProperties()[YOUNG_MODULUS];
+			const double nu = this->GetProperties()[POISSON_RATIO];
 			this->CalculateConstitutiveMatrix(ConstitutiveMatrix, E, nu);
 
-			noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight *(1 - damage_element)* Matrix(prod(ConstitutiveMatrix, B))); // LHS
+			noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight *(1.0 - damage_element)* Matrix(prod(ConstitutiveMatrix, B))); // LHS
 
 			Vector VolumeForce = ZeroVector(dimension);
 			VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
@@ -481,9 +478,9 @@ namespace Kratos
 
 				if (IsDEM == true && NodalForceApplied == false)
 				{
-					double ForceX = NodesElement[i].GetValue(NODAL_FORCE_X);
-					double ForceY = NodesElement[i].GetValue(NODAL_FORCE_Y);
-					double ForceZ = NodesElement[i].GetValue(NODAL_FORCE_Z);
+					const double ForceX = NodesElement[i].GetValue(NODAL_FORCE_X);
+					const double ForceY = NodesElement[i].GetValue(NODAL_FORCE_Y);
+					const double ForceZ = NodesElement[i].GetValue(NODAL_FORCE_Z);
 
 					rNodalRHS[3 * i]     += ForceX;
 					rNodalRHS[3 * i + 1] += ForceY;
@@ -637,18 +634,17 @@ namespace Kratos
 	void FemDem3DElement::CalculatePrincipalStresses(Vector& rPrincipalStressVector, const Vector& StressVector)
 	{
 		rPrincipalStressVector.resize(3);
-		double I1, I2, I3, phi, Num, Denom, II1;
-		I1 = this->Calculate_I1_Invariant(StressVector);
-		I2 = this->Calculate_I2_Invariant(StressVector);
-		I3 = this->Calculate_I3_Invariant(StressVector);
-		II1 = I1*I1;
+		const double I1 = this->Calculate_I1_Invariant(StressVector);
+		const double I2 = this->Calculate_I2_Invariant(StressVector);
+		const double I3 = this->Calculate_I3_Invariant(StressVector);
+		const double II1 = I1*I1;
 
-		Num = (2.0*II1 - 9.0*I2)*I1 + 27.0*I3;
-		Denom = (II1 - 3.0*I2);
+		const double Num = (2.0*II1 - 9.0*I2)*I1 + 27.0*I3;
+		const double Denom = (II1 - 3.0*I2);
 
 		if (Denom != 0.0)
 		{
-			phi = Num / (2.0*Denom*std::sqrt(Denom));
+			double phi = Num / (2.0*Denom*std::sqrt(Denom));
 
 			if (std::abs(phi) > 1.0)
 			{
@@ -656,11 +652,11 @@ namespace Kratos
 				else phi = -1.0;
 			}
 
-			double acosphi = std::acos(phi);
+			const double acosphi = std::acos(phi);
 			phi = acosphi / 3.0;
 
-			double aux1 = 2.0/3.0*std::sqrt(II1 - 3.0*I2);
-			double aux2 = I1 / 3.0;
+			const double aux1 = 2.0/3.0*std::sqrt(II1 - 3.0*I2);
+			const double aux2 = I1 / 3.0;
 
 			rPrincipalStressVector[0] = aux2 + aux1*std::cos(phi);
 			rPrincipalStressVector[1] = aux2 + aux1*std::cos(phi - 2.09439510239);

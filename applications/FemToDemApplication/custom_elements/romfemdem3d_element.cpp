@@ -209,7 +209,6 @@ namespace Kratos
         }
         else StressVectorSteel = ZeroVector(voigt_size);
         
-
         // Predictive Stresses
         this->SetValue(CONCRETE_STRESS_VECTOR, StressVectorConcrete);
         this->SetValue(STEEL_STRESS_VECTOR, StressVectorSteel);
@@ -413,7 +412,7 @@ namespace Kratos
 	)
 	{
     	const unsigned int& integration_points_number = GetGeometry().IntegrationPointsNumber( mThisIntegrationMethod );
-    	const unsigned int dimension       = GetGeometry().WorkingSpaceDimension();
+    	const unsigned int dimension                  = GetGeometry().WorkingSpaceDimension();
 
         if ( rOutput[0].size2() != dimension )
             rOutput[0].resize( dimension, dimension, false );
@@ -480,10 +479,11 @@ namespace Kratos
 		const Matrix& C
 	)
 	{ // ecuua
-		int iter = 0, iter_max = 9000;
+		int iter = 0;
+		const int iter_max = 9000;
 		
-		double Kp = 0.0, Capap = 0.0;
-		Vector PlasticStrain = ZeroVector(6);
+		double Kp, Capap;
+		Vector PlasticStrain;
 		bool Conv = false;
 
 		// Get Converged values from the prev step
@@ -491,7 +491,7 @@ namespace Kratos
 		Capap         = this->GetCapap();
 		PlasticStrain = this->GetPlasticDeformation();
 
-		double Yield = 0.0, PlasticDenominator = 0.0;
+		double Yield, PlasticDenominator;
 		Vector FluxVector = ZeroVector(6), PlasticStrainIncr = ZeroVector(6);
 
 		// Compute Plastic variables
@@ -511,15 +511,6 @@ namespace Kratos
 		}
 		else  // Plastic case
 		{
-			//KRATOS_WATCH(F)
-			//KRATOS_WATCH(Kp)
-			//KRATOS_WATCH(Yield)
-			//KRATOS_WATCH(this->Id())
-			//KRATOS_WATCH(PredictiveStress)
-			//KRATOS_WATCH(PlasticStrain)
-			//std::cout << "Plastic" << std::endl;
-
-
 			rIntegratedStress = PredictiveStress;
 			double DLambda;
 			Vector DS = ZeroVector(6), DESIG = ZeroVector(6);
@@ -543,7 +534,6 @@ namespace Kratos
 				if (F < std::abs(1.0e-8 * Kp))  // Has converged
 				{
 					Conv = true;
-					
 					// Update Int Vars
 					this->SetNonConvergedKp(Kp);
 					this->SetNonConvergedCapap(Capap);
@@ -566,7 +556,7 @@ namespace Kratos
 		double I1 = this->Calculate_I1_Invariant(StressVector);
 
 		rDeviator = StressVector;
-		double Pmean = I1 / 3;
+		const double Pmean = I1 / 3.0;
 
 		rDeviator[0] -= Pmean;
 		rDeviator[1] -= Pmean;
@@ -575,7 +565,7 @@ namespace Kratos
 		rJ2 = 0.5*(rDeviator[0]*rDeviator[0] + rDeviator[1]*rDeviator[1] + rDeviator[2]*rDeviator[2]) +
 		(rDeviator[3]*rDeviator[3] + rDeviator[4]*rDeviator[4] + rDeviator[5]*rDeviator[5]);
 
-		ryield = sqrt(3.0*rJ2);
+		ryield = std::sqrt(3.0*rJ2);
 	}
 
 	void RomFemDem3DElement::CalculatePlasticParameters(
@@ -610,7 +600,7 @@ namespace Kratos
 	{
 		// Only valid for Von Mises Yield Surf
 		Vector AuxVec = ZeroVector(6);
-		double denomJ2 = 1 / (2.0*sqrt(J2));
+		const double denomJ2 = 1.0 / (2.0*std::sqrt(J2));
 
 		for (int i = 0; i < AuxVec.size(); i++)
 		{
@@ -621,7 +611,7 @@ namespace Kratos
 		AuxVec[4] *= 2.0; 
 		AuxVec[5] *= 2.0; 
 
-		rFluxVector = sqrt(3)*AuxVec;
+		rFluxVector = std::sqrt(3.0)*AuxVec;
 	}
 
 	void RomFemDem3DElement::CalculateRFactors(const Vector& StressVector,double& r0, double& r1)
@@ -663,28 +653,26 @@ namespace Kratos
 		Vector& rHCapa
 	)
 	{
-		double n, Gf, Gfc, l_char, hlim, C0, C1, fc, ft, Volume, gf, gfc, E;
+		const double E   = this->GetProperties()[YOUNG_MODULUS_STEEL];
+		const double fc  = this->GetProperties()[YIELD_STRESS_C_STEEL];
+		const double ft  = this->GetProperties()[YIELD_STRESS_T_STEEL];
+		const double n   = fc/ft;
+		const double Gf  = this->GetProperties()[FRACTURE_ENERGY_STEEL];
+		const double Gfc = Gf*std::pow(n,2);
+		const double Volume = this->GetGeometry().Volume();
+		const double l_char = std::pow(Volume, 1.0/3.0);  
 
-		E   = this->GetProperties()[YOUNG_MODULUS_STEEL];
-		fc  = this->GetProperties()[YIELD_STRESS_C_STEEL];
-		ft  = this->GetProperties()[YIELD_STRESS_T_STEEL];
-		n   = fc/ft;
-		Gf  = this->GetProperties()[FRACTURE_ENERGY_STEEL];
-		Gfc = n*n*Gf;
-		Volume = this->GetGeometry().Volume();
-		l_char = pow(Volume, 1/3);  
+		const double gf  = Gf  / l_char;
+		const double gfc = Gfc / l_char;
 
-		gf  = Gf  / l_char;
-		gfc = Gfc / l_char;
-
-		hlim = 2.0 * E * gfc / (fc * fc);
+		const double hlim = 2.0 * E * gfc / std::pow(fc, 2);
 		if (l_char > hlim) KRATOS_THROW_ERROR(std::invalid_argument, " Characteristic length lower than minimum ", l_char)
 
 		double Const0 = 0.0, Const1 = 0.0;
 		if (gf  > 0.000001) Const0 = r0 / gf;
 		if (gfc > 0.000001) Const1 = r1 / gfc;
 
-		double Const = Const0 + Const1;
+		const double Const = Const0 + Const1;
 		double Dcapa = 0.0;
 
 		for (int i = 0; i < 6; i++)
@@ -707,10 +695,9 @@ namespace Kratos
 		double& rSlope
 	)
 	{
-		double fc, ft, n;
-		fc = this->GetProperties()[YIELD_STRESS_C_STEEL];
-		ft = this->GetProperties()[YIELD_STRESS_T_STEEL];
-		n  = fc / ft;
+		const double fc = this->GetProperties()[YIELD_STRESS_C_STEEL];
+		const double ft = this->GetProperties()[YIELD_STRESS_T_STEEL];
+		const double n  = fc / ft;
 		Vector G = ZeroVector(2), EqTrhesholds = ZeroVector(2), Slopes = ZeroVector(2);
 		G[0]  = this->GetProperties()[FRACTURE_ENERGY_STEEL];
 		G[1]  = n*n*G[0];
@@ -749,7 +736,7 @@ namespace Kratos
 		const double fc = this->GetProperties()[YIELD_STRESS_C_STEEL];
 		
 		rEqThreshold = fc * std::sqrt(1 - Capap);
-		rSlope = -0.5 * (fc*fc / (rEqThreshold));
+		rSlope = -0.5 * (std::pow(fc, 2) / (rEqThreshold));
 	}
 
 	void RomFemDem3DElement::ExponentialCalculateThreshold(
@@ -761,7 +748,7 @@ namespace Kratos
 	{   // Exponential softening case!!
 		const double fc = this->GetProperties()[YIELD_STRESS_C_STEEL];
 		
-		rEqThreshold = fc * (1 - Capap);
+		rEqThreshold = fc * (1.0 - Capap);
 		rSlope = -0.5 * fc;
 	}
 
@@ -860,7 +847,6 @@ namespace Kratos
 					double old_threshold = this->GetValue(STRESS_THRESHOLD);
 					this->SetValue(INITIAL_THRESHOLD, old_threshold);
 				}
-
 			}
 			else
 			{
@@ -868,7 +854,6 @@ namespace Kratos
 				double old_threshold = this->GetValue(STRESS_THRESHOLD);
 				this->SetValue(INITIAL_THRESHOLD, old_threshold);
 			}
-
 		}
 
 		this->ResetNonConvergedVars();
@@ -925,8 +910,8 @@ namespace Kratos
 		if (rVariable == DAMAGE_ELEMENT)
 		{
 			rOutput.resize(1);
-			for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
-				//rOutput[PointNumber] = double(this->Get_Convergeddamage());
+			for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++)
+			{
 				rOutput[PointNumber] = double(this->GetValue(DAMAGE_ELEMENT));
 			}
 		}
@@ -934,7 +919,8 @@ namespace Kratos
 		if (rVariable == IS_DAMAGED)
 		{
 			rOutput.resize(1);
-			for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
+			for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) 
+			{
 				rOutput[PointNumber] = double(this->GetValue(IS_DAMAGED));
 			}
 		}
@@ -942,7 +928,8 @@ namespace Kratos
 		if (rVariable == STRESS_THRESHOLD)
 		{
 			rOutput.resize(1);
-			for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) {
+			for (unsigned int PointNumber = 0; PointNumber < 1; PointNumber++) 
+			{
 				rOutput[PointNumber] = double(this->GetValue(STRESS_THRESHOLD));
 			}
 		}
@@ -964,7 +951,4 @@ namespace Kratos
 			}
 		}
 	}
-
-
-
 } // Element
