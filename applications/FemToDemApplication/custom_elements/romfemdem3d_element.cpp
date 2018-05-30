@@ -184,13 +184,12 @@ namespace Kratos
 
     void RomFemDem3DElement::CalculatePredictiveStresses(const Vector& StrainVector)
     {
-        double Ec,Es,nuc,nus;
-        Ec  = this->GetProperties()[YOUNG_MODULUS];
-        Es  = this->GetProperties()[YOUNG_MODULUS_STEEL];
-        nuc = this->GetProperties()[POISSON_RATIO];
-        nus = this->GetProperties()[POISSON_RATIO_STEEL];
+        const double Ec  = this->GetProperties()[YOUNG_MODULUS];
+		const double Es  = this->GetProperties()[YOUNG_MODULUS_STEEL];
+		const double nuc = this->GetProperties()[POISSON_RATIO];
+		const double nus = this->GetProperties()[POISSON_RATIO_STEEL];
 
-        const unsigned int number_of_nodes = GetGeometry().size();
+        //const unsigned int number_of_nodes = GetGeometry().size();
 		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
 		unsigned int voigt_size = dimension * (dimension + 1) * 0.5;
         Matrix ConstitutiveMatrixConcrete = ZeroMatrix(voigt_size, voigt_size);
@@ -314,22 +313,22 @@ namespace Kratos
 			this->Set_NonConvergeddamage(damage_element);
 			
 			const Vector& StressVectorConcrete = this->GetValue(CONCRETE_STRESS_VECTOR);
-			IntegratedStressVectorConcrete = (1 - damage_element)*StressVectorConcrete;
+			noalias(IntegratedStressVectorConcrete) = (1.0 - damage_element)*StressVectorConcrete;
 			this->SetIntegratedStressVector(IntegratedStressVectorConcrete);
 
             // Linear elastic const matrix concrete
 			Matrix ConstitutiveMatrixConcrete = ZeroMatrix(voigt_size, voigt_size);
-			double Ec  = this->GetProperties()[YOUNG_MODULUS];
-			double nuc = this->GetProperties()[POISSON_RATIO];
+			const double Ec  = this->GetProperties()[YOUNG_MODULUS];
+			const double nuc = this->GetProperties()[POISSON_RATIO];
 			this->CalculateConstitutiveMatrix(ConstitutiveMatrixConcrete, Ec, nuc);
 
             // Linear elastic const matrix steel
 			Matrix ConstitutiveMatrixSteel = ZeroMatrix(voigt_size, voigt_size);
-			double Es  = this->GetProperties()[YOUNG_MODULUS_STEEL];
-			double nus = this->GetProperties()[POISSON_RATIO_STEEL];
+			const double Es  = this->GetProperties()[YOUNG_MODULUS_STEEL];
+			const double nus = this->GetProperties()[POISSON_RATIO_STEEL];
 			this->CalculateConstitutiveMatrix(ConstitutiveMatrixSteel, Es, nus);
 
-            double k = this->GetProperties()[STEEL_VOLUMETRIC_PART];
+            const double k = this->GetProperties()[STEEL_VOLUMETRIC_PART];
 
             Matrix CompositeTangentMatrix = k*ConstitutiveMatrixSteel + (1.0-k)*(1.0-damage_element)*ConstitutiveMatrixConcrete;
 
@@ -351,6 +350,13 @@ namespace Kratos
 			//compute and add internal forces (RHS = rRightHandSideVector = Fext - Fint)
             Vector SteelStressVector = this->GetValue(STEEL_STRESS_VECTOR);
 			Vector IntegratedSteelVector = ZeroVector(voigt_size);
+
+
+			//if (rCurrentProcessInfo[STEP] == 64 && this->Id() == 5)
+			//{
+			//	KRATOS_WATCH(SteelStressVector)
+			//	KRATOS_WATCH(SteelStressVector)
+			//}
 
 			// Apply plasticity steel
 			this->IntegrateStressPlasticity(IntegratedSteelVector, SteelStressVector, ConstitutiveMatrixSteel);
@@ -494,7 +500,7 @@ namespace Kratos
 
 		double F = Yield - Kp;
 
-		if (F <= std::abs(1.0e-15 * Kp))  // Elastic
+		if (F <= std::abs(1.0e-8 * Kp))  // Elastic
 		{
 			rIntegratedStress = PredictiveStress;
 			this->SetNonConvergedKp(Kp);
@@ -505,8 +511,17 @@ namespace Kratos
 		}
 		else  // Plastic case
 		{
+			//KRATOS_WATCH(F)
+			//KRATOS_WATCH(Kp)
+			//KRATOS_WATCH(Yield)
+			//KRATOS_WATCH(this->Id())
+			//KRATOS_WATCH(PredictiveStress)
+			//KRATOS_WATCH(PlasticStrain)
+			//std::cout << "Plastic" << std::endl;
+
+
 			rIntegratedStress = PredictiveStress;
-			double DLambda = 0.0;
+			double DLambda;
 			Vector DS = ZeroVector(6), DESIG = ZeroVector(6);
 
 			while (Conv == false && iter <= iter_max)
@@ -525,7 +540,7 @@ namespace Kratos
 
 				F = Yield - Kp;
 
-				if (F < std::abs(1.0e-15 * Kp))  // Has converged
+				if (F < std::abs(1.0e-8 * Kp))  // Has converged
 				{
 					Conv = true;
 					
@@ -700,9 +715,24 @@ namespace Kratos
 		G[0]  = this->GetProperties()[FRACTURE_ENERGY_STEEL];
 		G[1]  = n*n*G[0];
 
+		const int HardCurve = this->GetProperties()[HARDENING_LAW];
+
 		for (int i = 0; i < 2; i++) // tension and compression curves
 		{
-			this->LinearCalculateThreshold(Capap, G[i], EqTrhesholds[i], Slopes[i]);
+			switch(HardCurve)
+			{
+				case 1:
+					this->LinearCalculateThreshold(Capap, G[i], EqTrhesholds[i], Slopes[i]);
+					break;
+
+				case 2:
+					this->ExponentialCalculateThreshold(Capap, G[i], EqTrhesholds[i], Slopes[i]);
+					break;
+
+				case 3:
+					this->HardSoftCalculateThreshold(Capap, G[i], EqTrhesholds[i], Slopes[i]);
+					break;
+			}
 		}
 
 		rEquivalentStressThreshold = r0 * EqTrhesholds[0] + r1 * EqTrhesholds[1];
@@ -715,11 +745,48 @@ namespace Kratos
 		double& rEqThreshold, 
 		double& rSlope
 	)
-	{
-		double fc = this->GetProperties()[YIELD_STRESS_C_STEEL];
-		// Linear case!!
-		rEqThreshold = fc * sqrt(1 - Capap);
+	{   // Linear softening case!!
+		const double fc = this->GetProperties()[YIELD_STRESS_C_STEEL];
+		
+		rEqThreshold = fc * std::sqrt(1 - Capap);
 		rSlope = -0.5 * (fc*fc / (rEqThreshold));
+	}
+
+	void RomFemDem3DElement::ExponentialCalculateThreshold(
+		const double Capap, 
+		const double Gf, 
+		double& rEqThreshold, 
+		double& rSlope
+	)
+	{   // Exponential softening case!!
+		const double fc = this->GetProperties()[YIELD_STRESS_C_STEEL];
+		
+		rEqThreshold = fc * (1 - Capap);
+		rSlope = -0.5 * fc;
+	}
+
+	void RomFemDem3DElement::HardSoftCalculateThreshold(
+		const double PlasticDissipation,
+		const double Gf, 
+		double& rEqThreshold, 
+		double& rSlope
+	)
+	{   // Linear Hardening followed by exp softening
+		const double InitialThreshold  = this->GetProperties()[YIELD_STRESS_C_STEEL];     // sikma
+        const double UltimateStress    = this->GetProperties()[MAXIMUM_STRESS];           // sikpi
+        const double MaxStressPosition = this->GetProperties()[MAXIMUM_STRESS_POSITION];  // cappi [0,1]
+
+        if (PlasticDissipation < 1.0)
+        {
+            const double Ro = std::sqrt(1.0 - InitialThreshold / UltimateStress);
+            double Alpha = std::log((1.0 - (1.0 - Ro)*(1.0 - Ro)) / ((3.0 - Ro)*(1.0 + Ro)*MaxStressPosition));
+            Alpha = std::exp(Alpha / (1.0 - MaxStressPosition));
+            const double Phi = std::pow((1.0 - Ro), 2) + ((3.0 - Ro)*(1.0 + Ro)*PlasticDissipation*(std::pow(Alpha, (1.0 - PlasticDissipation))));
+
+            rEqThreshold = UltimateStress*(2.0*std::sqrt(Phi) - Phi);
+            rSlope = UltimateStress*((1.0 / std::sqrt(Phi)) - 1.0)*(3.0 - Ro)*(1.0 + Ro)*(std::pow(Alpha, (1.0 - PlasticDissipation)))*
+                (1.0 - std::log(Alpha)*PlasticDissipation);
+        }
 	}
 
 	void RomFemDem3DElement::CalculateHardeningParameter(

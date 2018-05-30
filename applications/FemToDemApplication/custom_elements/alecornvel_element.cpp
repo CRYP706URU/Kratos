@@ -943,25 +943,25 @@ namespace Kratos
 	}
 	double AleCornVelElement::Calculate_J3_Invariant(double sigma1, double sigma2, double I1)
 	{
-		return	(sigma1 - I1 / 3)*((sigma2 - I1 / 3))*(-I1 / 3);
+		return	(sigma1 - I1 / 3.0)*((sigma2 - I1 / 3.0))*(-I1 / 3.0);
 	}
 	double AleCornVelElement::Calculate_Theta_Angle(double J2, double J3)
 	{
 		double sint3;
-		sint3 = (-3.0*sqrt(3)*J3) / (2 * J2*sqrt(J2));
+		sint3 = (-3.0*std::sqrt(3)*J3) / (2 * J2*std::sqrt(J2));
 		if (sint3 < -0.95) { sint3 = -1; }
 		if (sint3 > 0.95) { sint3 = 1; }
-		return asin(sint3) / 3;
+		return std::asin(sint3) / 3.0;
 	}
 
 	void AleCornVelElement::CalculateMassMatrix(MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo)
 	{
 		KRATOS_TRY
 
-			bool ComputeLumpedMassMatrix = false;
+		bool ComputeLumpedMassMatrix = false;
 		if (rCurrentProcessInfo.Has(COMPUTE_LUMPED_MASS_MATRIX))
-			if (rCurrentProcessInfo[COMPUTE_LUMPED_MASS_MATRIX] == true)
-				ComputeLumpedMassMatrix = true;
+		if (rCurrentProcessInfo[COMPUTE_LUMPED_MASS_MATRIX] == true)
+			ComputeLumpedMassMatrix = true;
 
 		if (ComputeLumpedMassMatrix == false) {
 

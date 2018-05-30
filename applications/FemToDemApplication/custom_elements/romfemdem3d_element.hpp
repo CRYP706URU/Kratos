@@ -94,6 +94,8 @@ namespace Kratos
 		void CalculateEquivalentStressThreshold(const double Capap, const double r0, const double r1,
 			double& rEquivalentStressThreshold, double& rSlope);
 		void LinearCalculateThreshold(const double Capap, const double Gf, double& rEqThreshold, double& rSlope);
+		void ExponentialCalculateThreshold(const double Capap, const double Gf, double& rEqThreshold, double& rSlope);
+		void HardSoftCalculateThreshold(const double Capap, const double Gf, double& rEqThreshold, double& rSlope);		
 		void CalculateHardeningParameter(const Vector& FluxVector, const double SlopeThreshold,
 			const Vector& HCapa, double& HardeningParam);
 		void CalculatePlasticDenominator(const Vector& FluxVector, const Matrix& ElasticConstMatrix,

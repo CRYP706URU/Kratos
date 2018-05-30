@@ -82,26 +82,51 @@ class FEMDEM_Solution:
 #============================================================================================================================
 	def InitializeSolutionStep(self):
 
-		is_remeshing = self.CheckIfHasRemeshed()
-		
-		if is_remeshing:
-			# Remove DEMS from previous mesh
-			self.SpheresModelPart.Elements.clear()
-			self.SpheresModelPart.Nodes.clear()
-			
 		if self.DoRemeshing:
+			is_remeshing = self.CheckIfHasRemeshed()
+		
+			if is_remeshing:
+				# Remove DEMS from previous mesh
+				self.SpheresModelPart.Elements.clear()
+				self.SpheresModelPart.Nodes.clear()
+
+			# Perform remeshing
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
 		self.FEM_Solution.InitializeSolutionStep()
 
 		# just for testing ->Remove
-		self.FEM_Solution.GraphicalOutputPrintOutput()
+		#self.FEM_Solution.GraphicalOutputPrintOutput()
 		# ***********************
 
+
+
+
+
+		# just for debug
+		'''
+		for node in self.FEM_Solution.main_model_part.Nodes:
+			print(str(node.Id) + "  " + str(node.X) + "  " + str(node.Y))
+		'''
+
+		'''
+		for elem in self.FEM_Solution.main_model_part.Elements:
+			if elem.GetNodes()[0].Id == 55 or elem.GetNodes()[1].Id == 55 or elem.GetNodes()[2].Id == 55:
+				print(str(elem.Id) + " " + str(elem.GetNodes()[0].Id)+ " " + str(elem.GetNodes()[1].Id)+ " " + str(elem.GetNodes()[2].Id))
+				Wait()
+			else:
+				print(str(elem.Id) + "  but no node 55  " + str(elem.GetNodes()[0].Id)+ " " + str(elem.GetNodes()[1].Id)+ " " + str(elem.GetNodes()[2].Id))
+		Wait() '''
+		# just for debug
+
+
+
+
+
+
 #============================================================================================================================
-	def SolveSolutionStep(self):
+	def SolveSolutionStep(self): # Function to perform the coupling FEM <-> DEM
 		
-		# Function to perform the coupling FEM <-> DEM
 		self.FEM_Solution.clock_time = self.FEM_Solution.StartTimeMeasuring()
 
 		#### SOLVE FEM #########################################
@@ -114,8 +139,8 @@ class FEMDEM_Solution:
 		self.CheckInactiveNodes()
 		self.UpdateDEMVariables()     # We update coordinates, displ and velocities of the DEM according to FEM
 
+		# Extrapolate the VonMises normalized stress to nodes (remeshing)
 		KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-
 
 		self.DEM_Solution.InitializeTimeStep()
 		self.DEM_Solution.time = self.FEM_Solution.time

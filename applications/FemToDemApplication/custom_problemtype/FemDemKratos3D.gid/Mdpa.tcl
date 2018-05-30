@@ -55,6 +55,12 @@ proc WriteMdpa { basename dir problemtypedir } {
 			puts $FileVar "    YIELD_STRESS_C_STEEL     [lindex [lindex $Groups $i] 18]"
 			puts $FileVar "    YIELD_STRESS_T_STEEL     [lindex [lindex $Groups $i] 19]"
 			puts $FileVar "    FRACTURE_ENERGY_STEEL    [lindex [lindex $Groups $i] 20]"
+			puts $FileVar "    HARDENING_LAW            [lindex [lindex $Groups $i] 21]"
+			
+			if {[lindex [lindex $Groups $i] 21] eq 3} {
+				puts $FileVar "    MAXIMUM_STRESS           [lindex [lindex $Groups $i] 22]"
+				puts $FileVar "    MAXIMUM_STRESS_POSITION  [lindex [lindex $Groups $i] 23]"
+			}
 		}
         puts $FileVar ""
         puts $FileVar "// DAMAGE PARAMETERS"

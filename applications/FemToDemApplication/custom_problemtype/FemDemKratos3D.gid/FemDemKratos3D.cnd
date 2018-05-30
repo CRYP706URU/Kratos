@@ -48,6 +48,14 @@ QUESTION: Yield_Stress_Tension_Fiber
 VALUE: 210e6
 QUESTION: Fracture_Energy_Fiber
 VALUE: 1.5e5
+QUESTION: Hardening_Law#CB#(1,2,3)
+VALUE: 1
+HELP: 1: Linear Softening // 2: Exp Softening // 3: Hardening+Softening
+QUESTION: Max_Uniaxial_Stress_Curve_3
+VALUE: 250e6
+QUESTION: Max_Stress_position_Curve_3
+VALUE: 0.3
+HELP: Value Ranging 0,1
 END CONDITION
 
 CONDITION: Initial_DEM_Part

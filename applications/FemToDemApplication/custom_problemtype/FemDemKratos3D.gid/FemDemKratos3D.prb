@@ -20,6 +20,9 @@ HELP: For the moment, MPI only works in Linux and requires compiling METIS_APPLI
 DEPENDENCIES: (OpenMP,RESTORE,Number_of_threads,#CURRENT#)(MPI,HIDE,Number_of_threads,1)
 QUESTION: Number_of_threads
 VALUE: max
+QUESTION: Activate_MMG_Remeshing#CB#(true,false)
+VALUE: false
+HELP: Enables the adaptative meshing technique
 
 
 TITLE:Solver_Settings
@@ -66,7 +69,7 @@ QUESTION: Min_Radius_Factor
 VALUE: 0.1
 HELP: Times the initial radius. In order to use a constant radius, choose the same value for Min Radius Factor and Max Radius Factor
 QUESTION: Reform_Dofs_At_Each_Step#CB#(true,false)
-VALUE: false
+VALUE: true
 QUESTION: Move_Mesh#CB#(true,false)
 VALUE: false
 QUESTION: Block_Builder#CB#(true,false)
