@@ -350,13 +350,6 @@ namespace Kratos
             Vector SteelStressVector = this->GetValue(STEEL_STRESS_VECTOR);
 			Vector IntegratedSteelVector = ZeroVector(voigt_size);
 
-
-			//if (rCurrentProcessInfo[STEP] == 64 && this->Id() == 5)
-			//{
-			//	KRATOS_WATCH(SteelStressVector)
-			//	KRATOS_WATCH(SteelStressVector)
-			//}
-
 			// Apply plasticity steel
 			this->IntegrateStressPlasticity(IntegratedSteelVector, SteelStressVector, ConstitutiveMatrixSteel);
 			this->SetValue(STEEL_STRESS_VECTOR, IntegratedSteelVector);
@@ -553,7 +546,7 @@ namespace Kratos
 		double& rJ2
 	)
 	{
-		double I1 = this->Calculate_I1_Invariant(StressVector);
+		const double I1 = this->Calculate_I1_Invariant(StressVector);
 
 		rDeviator = StressVector;
 		const double Pmean = I1 / 3.0;
@@ -563,7 +556,7 @@ namespace Kratos
 		rDeviator[2] -= Pmean;
 
 		rJ2 = 0.5*(rDeviator[0]*rDeviator[0] + rDeviator[1]*rDeviator[1] + rDeviator[2]*rDeviator[2]) +
-		(rDeviator[3]*rDeviator[3] + rDeviator[4]*rDeviator[4] + rDeviator[5]*rDeviator[5]);
+			(rDeviator[3]*rDeviator[3] + rDeviator[4]*rDeviator[4] + rDeviator[5]*rDeviator[5]);
 
 		ryield = std::sqrt(3.0*rJ2);
 	}

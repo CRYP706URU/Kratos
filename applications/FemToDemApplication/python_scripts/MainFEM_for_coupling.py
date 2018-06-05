@@ -39,15 +39,12 @@ class FEM_for_coupling_Solution(MainFemDem.FEM_Solution):
 		else:
 			self.solver.AddDofs()
 
-
 		# Add materials (assign material to model_parts if Materials.json exists)
 		self.AddMaterials()
 		
-
 		# Add processes
 		self.model_processes = self.AddProcesses()
 		self.model_processes.ExecuteInitialize()
-
 
 		# Print model_part and properties
 		if(self.echo_level > 1):
@@ -58,7 +55,6 @@ class FEM_for_coupling_Solution(MainFemDem.FEM_Solution):
 
 
 		#### START SOLUTION ####
-
 		self.computing_model_part = self.solver.GetComputingModelPart()
 
 		## Sets strategies, builders, linear solvers, schemes and solving info, and fills the buffer
@@ -74,7 +70,9 @@ class FEM_for_coupling_Solution(MainFemDem.FEM_Solution):
 
 
 		print(" ")
-		print("::[KSM Simulation]:: Analysis -START- ")
+		print("=================================================")
+		print(" - Kratos FemDem Application Calculation Start - ")
+		print("=================================================")
 
 		self.model_processes.ExecuteBeforeSolutionLoop()
 

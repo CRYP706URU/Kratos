@@ -98,7 +98,7 @@ namespace Kratos
 		}
 
 		// IDEM with the edge damages
-		Vector DamageEdges   = this->GetDamages();
+		Vector DamageEdges    = this->GetDamages();
 		double DamageElement  = this->GetValue(DAMAGE_ELEMENT);
 
 		if (DamageEdges[0] == 0.0 && DamageEdges[1] == 0.0 && DamageEdges[2] == 0.0)
@@ -279,11 +279,18 @@ namespace Kratos
 				this->CalculateDeformationMatrix(B, DN_DX);
 				this->SetBMatrix(B);
 
+				//if (rCurrentProcessInfo[STEP] == 2 && this->Id() == 48)
+				//{
+				//	Geometry< Node < 3 > >& Nodes = this->GetGeometry();
+				//	KRATOS_WATCH(Nodes[0].X())
+				//	KRATOS_WATCH(this->Id())
+				//	KRATOS_WATCH(Values.GetStressVector())
+				//	KRATOS_WATCH(Values.GetStrainVector())
+				//	std::cout << "**" << std::endl;
+				//}
 			}
 		}
-		
 		KRATOS_CATCH("")
-
 	}
 
 	
@@ -317,62 +324,27 @@ namespace Kratos
 		{
 			const Matrix& Ncontainer = GetGeometry().ShapeFunctionsValues(mThisIntegrationMethod);
 			Vector N = row(Ncontainer, PointNumber);
-		    //	Matrix InvJ(dimension, dimension);
-			//  noalias(InvJ) = ZeroMatrix(dimension, dimension);
 			double detJ = 0;
 			Matrix InvJ(dimension, dimension);
 			noalias(InvJ) = ZeroMatrix(dimension, dimension);
 			MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
-			//MathUtils<double>::InvertMatrix(J[PointNumber], InvJ, detJ);
 
 			double IntegrationWeight = integration_points[PointNumber].Weight() * detJ;
 			if (dimension == 2) IntegrationWeight *= GetProperties()[THICKNESS];
 			this->SetValue(INTEGRATION_COEFFICIENT, IntegrationWeight);
-
-			//Matrix B = ZeroMatrix(voigt_size, dimension*number_of_nodes);
 			const Matrix& B = this->GetBMatrix();
 
 			Vector IntegratedStressVector = ZeroVector(voigt_size);
 
 			// Find Neighbour Elements
 			WeakPointerVector< Element >& elem_neigb = this->GetValue(NEIGHBOUR_ELEMENTS);
-			if (elem_neigb.size() == 0) { KRATOS_THROW_ERROR(std::invalid_argument, " Neighbour Elements not calculated --> size = ", elem_neigb.size()) }
-
-
-
-			// check if one neighbour is inactive -> do not take into account
-			//WeakPointerVector< Element > Filtered_elem_neigb;
-			////Filtered_elem_neigb.resize(3);
-			//bool is_active_neigh = true;
-
-			//for (int neig = 0; neig < 3; neig++) 
-			//{
-			//	if (elem_neigb[neig].IsDefined(ACTIVE))
-			//	{
-			//		is_active_neigh = elem_neigb[neig].Is(ACTIVE);
-			//	}
-
-			//	if(is_active_neigh == false) 
-			//	{
-			//		//Filtered_elem_neigb[neig] = *this;
-			//		Filtered_elem_neigb.push_back(*this);
-			//	}
-			//	else 
-			//	{
-			//		//Filtered_elem_neigb[neig] = elem_neigb[neig];
-			//		Filtered_elem_neigb.push_back(elem_neigb[neig]);
-			//	}
-			//}
-			//***************************
-			
-
-
-
+			if (elem_neigb.size() == 0) 
+			{ 
+				KRATOS_THROW_ERROR(std::invalid_argument, " Neighbour Elements not calculated --> size = ", elem_neigb.size()) 
+			}
 
 			// Compute damage on each edge of the element
-			// check if one neighbour is inactive -> do not take into account
 			double damage[3] = { 0,0,0 };
-			//Element Filtered_elem_neigb;
 
 			// Loop Over Edges
 			for (int cont = 0; cont < 3; cont++)
@@ -383,17 +355,6 @@ namespace Kratos
 				{
 					is_active_neigh = elem_neigb[cont].Is(ACTIVE);
 				}
-
-				//if(is_active_neigh == false) 
-				//{
-				//	//Filtered_elem_neigb[neig] = *this;
-				//	Filtered_elem_neigb = *this;
-				//}
-				//else 
-				//{
-				//	//Filtered_elem_neigb[neig] = elem_neigb[neig];
-				//	Filtered_elem_neigb = elem_neigb[cont];
-				//}
 
 				double damagee = 0.0;
 				Vector  AverageStress;
@@ -425,10 +386,17 @@ namespace Kratos
 				}
 				double l_char = this->Get_l_char(cont);
 
-
 				this->IntegrateStressDamageMechanics(IntegratedStressVector, damagee, AverageStrain, AverageStress, cont, l_char);
 				damage[cont] = damagee;
 				this->Set_NonConvergeddamages(damagee, cont);
+
+				//if (rCurrentProcessInfo[STEP] == 2 && this->Id() == 48)
+				//{
+				//	Geometry< Node < 3 > >& Nodes = this->GetGeometry();
+				//	KRATOS_WATCH(damagee)
+				//	KRATOS_WATCH(l_char)
+				//	std::cout << "**" << std::endl;
+				//}
 
 			} // Loop Over Edges
 
@@ -440,50 +408,17 @@ namespace Kratos
 			this->Set_NonConvergeddamage(damage_element);
 
 
-			//Vector StressVector = ZeroVector(3);
 			const Vector& StressVector = this->GetValue(STRESS_VECTOR);
 			IntegratedStressVector = (1 - damage_element)*StressVector;
 
 			this->SetIntegratedStressVector(IntegratedStressVector);
-			//this->SetValue(STRESS_VECTOR_INTEGRATED ,IntegratedStressVector);
 
-			// Computation of the LHS with the Secant Constitutive Tensor
-			//if (this->GetProperties()[TANGENT_CONSTITUTIVE_TENSOR] == 0 || damage_element == 0.0)
-			//{
-				Matrix ConstitutiveMatrix = ZeroMatrix(voigt_size, voigt_size);
-				double E  = this->GetProperties()[YOUNG_MODULUS];
-				double nu = this->GetProperties()[POISSON_RATIO];
-				this->CalculateConstitutiveMatrix(ConstitutiveMatrix, E, nu);
+			Matrix ConstitutiveMatrix = ZeroMatrix(voigt_size, voigt_size);
+			double E  = this->GetProperties()[YOUNG_MODULUS];
+			double nu = this->GetProperties()[POISSON_RATIO];
+			this->CalculateConstitutiveMatrix(ConstitutiveMatrix, E, nu);
 
-				noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight *(1 - damage_element)* Matrix(prod(ConstitutiveMatrix, B))); //LHS
-			//}
-			// else // Tangent Constitutive Tensor
-			// {
-			// 	KRATOS_WATCH(damage_element)
-			// 		KRATOS_WATCH(this->Id())
-			// 	Matrix Aux = ZeroMatrix(3, 3);
-			// 	Matrix TangentTensor = ZeroMatrix(3, 3);
-			// 	for (int cont = 0; cont < 3; cont++)
-			// 	{
-			// 		Vector Stress1, Stress2, AverageStress;
-			// 		Vector Strain1, Strain2, AverageStrain;
-
-			// 		Stress1 = this->GetValue(STRESS_VECTOR);
-			// 		Stress2 = elem_neigb[cont].GetValue(STRESS_VECTOR);
-
-			// 		Strain1 = this->GetValue(STRAIN_VECTOR);
-			// 		Strain2 = elem_neigb[cont].GetValue(STRAIN_VECTOR);
-
-			// 		this->AverageVector(AverageStress, Stress1, Stress2);
-			// 		this->AverageVector(AverageStrain, Strain1, Strain2);
-
-			// 		Matrix TangentTensor;
-			// 		this->CalculateTangentTensor(TangentTensor, AverageStrain, AverageStress, cont, this->Get_l_char(cont));
-			// 		Aux += TangentTensor;
-			// 	}
-			// 	TangentTensor = Aux / 3;
-			// 	noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight * Matrix(prod(TangentTensor, B))); //LHS
-			// }
+			noalias(rLeftHandSideMatrix) += prod(trans(B), IntegrationWeight *(1 - damage_element)* Matrix(prod(ConstitutiveMatrix, B))); //LHS
 			
 			Vector VolumeForce = ZeroVector(dimension);
 			VolumeForce = this->CalculateVolumeForce(VolumeForce, N);
@@ -500,8 +435,14 @@ namespace Kratos
 			//compute and add internal forces (RHS = rRightHandSideVector = Fext - Fint)
 			noalias(rRightHandSideVector) -= IntegrationWeight * prod(trans(B), (1 - damage_element)*StressVector);
 
-			Vector NodalRHS = ZeroVector(6);
+			//if (this->Id() == 48)
+			//{
+			//	KRATOS_WATCH(rRightHandSideVector)
+			//	KRATOS_WATCH(damage_element)
+			//	std::cout << "**" << std::endl;
+			//}
 
+			Vector NodalRHS = ZeroVector(6);
 			#pragma omp critical
 			{
 				Geometry< Node < 3 > >& NodesElement = this->GetGeometry();
@@ -524,13 +465,10 @@ namespace Kratos
 					}
 				}
 			}
-			
 			// Add nodal contact forces from the DEM
 			noalias(rRightHandSideVector) += NodalRHS;
-
 		}
 		KRATOS_CATCH("")
-		//*****************************
 	}
 
 	void AleCornVelElement::CalculateDeformationMatrix(Matrix& rB, const Matrix& rDN_DX)
@@ -544,7 +482,6 @@ namespace Kratos
 
 		if (dimension == 2)
 		{
-
 			for (unsigned int i = 0; i < number_of_nodes; i++)
 			{
 				unsigned int index = 2 * i;

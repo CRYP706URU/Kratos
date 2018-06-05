@@ -103,8 +103,7 @@ namespace Kratos
 
 		void CalculateIntegratedStressVector(Vector& rIntegratedStressVector, const Vector rStressVector, const double Damage)
 		{
-			Vector res = ZeroVector(3);
-			res = (1 - Damage) * rStressVector;
+			rIntegratedStressVector = (1 - Damage) * rStressVector;
 		}
 
 		// Lode's angle
@@ -238,7 +237,7 @@ namespace Kratos
 		double mJac = 0.0;
 		double mIntegrationCoefficient = 0.0;
 
-	};// Class AleCornVelElement
+	}; // Class AleCornVelElement
 	
 }// Namespace Kratos
 #endif // KRATOS_ALECORNVEL_ELEMENT_H_INCLUDED  defined 

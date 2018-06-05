@@ -85,42 +85,26 @@ class FEMDEM_Solution:
 		if self.DoRemeshing:
 			is_remeshing = self.CheckIfHasRemeshed()
 		
+			# Perform remeshing
+			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
+
 			if is_remeshing:
 				# Remove DEMS from previous mesh
 				self.SpheresModelPart.Elements.clear()
 				self.SpheresModelPart.Nodes.clear()
 
-			# Perform remeshing
-			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
+				# Initialize processes after remeshing
+				#self.FEM_Solution.solver.Clear()
+				self.FEM_Solution.solver.Initialize()
+				self.FEM_Solution.model_processes = self.FEM_Solution.AddProcesses()
+				self.FEM_Solution.model_processes.ExecuteInitialize()
+				self.FEM_Solution.model_processes.ExecuteBeforeSolutionLoop()
+				self.FEM_Solution.model_processes.ExecuteInitializeSolutionStep()
 
 		self.FEM_Solution.InitializeSolutionStep()
-
 		# just for testing ->Remove
 		#self.FEM_Solution.GraphicalOutputPrintOutput()
-		# ***********************
-
-
-
-
-
-		# just for debug
-		'''
-		for node in self.FEM_Solution.main_model_part.Nodes:
-			print(str(node.Id) + "  " + str(node.X) + "  " + str(node.Y))
-		'''
-
-		'''
-		for elem in self.FEM_Solution.main_model_part.Elements:
-			if elem.GetNodes()[0].Id == 55 or elem.GetNodes()[1].Id == 55 or elem.GetNodes()[2].Id == 55:
-				print(str(elem.Id) + " " + str(elem.GetNodes()[0].Id)+ " " + str(elem.GetNodes()[1].Id)+ " " + str(elem.GetNodes()[2].Id))
-				Wait()
-			else:
-				print(str(elem.Id) + "  but no node 55  " + str(elem.GetNodes()[0].Id)+ " " + str(elem.GetNodes()[1].Id)+ " " + str(elem.GetNodes()[2].Id))
-		Wait() '''
-		# just for debug
-
-
-
+		# *********************** 
 
 
 
@@ -188,6 +172,7 @@ class FEMDEM_Solution:
 		# Print required info
 		self.PrintPlotsFiles()
 
+
 #============================================================================================================================
 	def FinalizeSolutionStep(self):
 
@@ -223,6 +208,8 @@ class FEMDEM_Solution:
 		
 		if self.DoRemeshing:
 			self.RemeshingProcessMMG.ExecuteFinalize()
+
+
 
 #============================================================================================================================
 	def GenerateDEM(self):

@@ -76,7 +76,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 		self.main_model_part.ProcessInfo.SetValue(KratosMultiphysics.TIME, self.start_time)
 
 
-		###TODO replace this "model" for real one once available in kratos core
+		### replace this "model" for real one once available in kratos core
 		self.Model = {self.ProjectParameters["problem_data"]["model_part_name"].GetString() : self.main_model_part}
 
 		#construct the solver (main setting methods are located in the solver_module)
@@ -106,9 +106,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 					if( self.main_model_part.HasSubModelPart(part_name) ):
 						self.Model.update({part_name: self.main_model_part.GetSubModelPart(part_name)})
 
-
 				assign_materials_processes = process_factory.KratosProcessFactory(self.Model).ConstructListOfProcesses( MaterialParameters["material_models_list"] )
-
 			for process in assign_materials_processes:
 				process.Execute()
 		else:
@@ -166,15 +164,12 @@ class FEM_Solution(MainSolidFEM.Solution):
 		else:
 			self.solver.AddDofs()
 
-
 		# Add materials (assign material to model_parts if Materials.json exists)
 		self.AddMaterials()
 		
-
 		# Add processes
 		self.model_processes = self.AddProcesses()
 		self.model_processes.ExecuteInitialize()
-
 
 		# Print model_part and properties
 		if(self.echo_level > 1):
@@ -183,24 +178,22 @@ class FEM_Solution(MainSolidFEM.Solution):
 			for properties in self.main_model_part.Properties:
 				print(properties)
 
-
 		#### START SOLUTION ####
-
 		self.computing_model_part = self.solver.GetComputingModelPart()
 
 		## Sets strategies, builders, linear solvers, schemes and solving info, and fills the buffer
 		self.solver.Initialize()
 		self.solver.SetEchoLevel(self.echo_level)
 
-		
 		# Initialize GiD  I/O (gid outputs, file_lists)
 		self.SetGraphicalOutput()
 		
 		self.GraphicalOutputExecuteInitialize()
 
-
 		print(" ")
-		print("::[KSM Simulation]:: Analysis -START- ")
+		print("=================================================")
+		print(" - Kratos FemDem Application Calculation Start - ")
+		print("=================================================")
 
 		self.model_processes.ExecuteBeforeSolutionLoop()
 
@@ -278,14 +271,22 @@ class FEM_Solution(MainSolidFEM.Solution):
 		#print("skin process executed")
 		#Wait()
 
-
 		self.delta_time = self.main_model_part.ProcessInfo[KratosMultiphysics.DELTA_TIME]
 
 		self.time = self.time + self.delta_time
 		self.step = self.step + 1
 
 		self.main_model_part.ProcessInfo[KratosMultiphysics.STEP] = self.step
-		self.main_model_part.CloneTimeStep(self.time) 
+
+		if self.step == 3:
+			print("4")
+			Wait()
+
+		self.main_model_part.CloneTimeStep(self.time)
+
+		if self.step == 3:
+			print("5")
+			Wait()
 
 		print(" [STEP:",self.step," TIME:", self.time,"]")
 
