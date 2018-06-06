@@ -18,24 +18,24 @@ namespace Kratos
 {
 
 
-	class AleCornVelElement : public SmallDisplacementElement    // Derived Element from SolidMechanics
+	class FemDem2DElement : public SmallDisplacementElement    // Derived Element from SolidMechanics
 	{
 
 	public:
 
 		/// Default constructors
-		AleCornVelElement(IndexType NewId, GeometryType::Pointer pGeometry);
+		FemDem2DElement(IndexType NewId, GeometryType::Pointer pGeometry);
 
-		AleCornVelElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+		FemDem2DElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
 
 		///Copy constructor
-		AleCornVelElement(AleCornVelElement const& rOther);
+		FemDem2DElement(FemDem2DElement const& rOther);
 
 		/// Destructor.
-		virtual ~AleCornVelElement();
+		virtual ~FemDem2DElement();
 
 		/// Assignment operator.
-		AleCornVelElement& operator=(AleCornVelElement const& rOther);
+		FemDem2DElement& operator=(FemDem2DElement const& rOther);
 
 
 		Element::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const;
@@ -43,7 +43,7 @@ namespace Kratos
 
 		Element::Pointer Clone(IndexType NewId, NodesArrayType const& ThisNodes) const;
 
-		AleCornVelElement()
+		FemDem2DElement()
 		{
 		}
 		
@@ -159,7 +159,7 @@ namespace Kratos
 		// Characteristic length Calculations
 		void   Set_l_char(double af, int cont) { mL_char[cont] = af; }
 		double Get_l_char(int cont) { return mL_char[cont]; }
-		double CalculateLchar(AleCornVelElement* CurrentElement, const Element& NeibElement, int cont);
+		double CalculateLchar(FemDem2DElement* CurrentElement, const Element& NeibElement, int cont);
 
 		void   SetJ(double af) { mJac = af; }
 		double GetJ() { return mJac; }
@@ -198,12 +198,12 @@ namespace Kratos
 		void SetIntegrationCoefficient(double tomIntegrationCoefficient){ mIntegrationCoefficient = tomIntegrationCoefficient;}
 		double GetIntegrationCoefficient(){ return mIntegrationCoefficient; }
 
-		void AleCornVelElement::SetValueOnIntegrationPoints(
+		void FemDem2DElement::SetValueOnIntegrationPoints(
 			const Variable<double>& rVariable,
 			std::vector<double>& rValues,
 			const ProcessInfo& rCurrentProcessInfo);
 
-		void AleCornVelElement::SetValueOnIntegrationPoints(
+		void FemDem2DElement::SetValueOnIntegrationPoints(
 			const Variable<Vector>& rVariable,
 			std::vector<Vector>& rValues,
 			const ProcessInfo& rCurrentProcessInfo);
@@ -237,7 +237,7 @@ namespace Kratos
 		double mJac = 0.0;
 		double mIntegrationCoefficient = 0.0;
 
-	}; // Class AleCornVelElement
+	}; // Class FemDem2DElement
 	
 }// Namespace Kratos
 #endif // KRATOS_ALECORNVEL_ELEMENT_H_INCLUDED  defined 

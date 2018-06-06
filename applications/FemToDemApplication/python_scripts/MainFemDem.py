@@ -206,7 +206,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 		self.end_time   = self.ProjectParameters["problem_data"]["end_time"].GetDouble()
 		self.delta_time = self.ProjectParameters["problem_data"]["time_step"].GetDouble()
 
-
+		'''
 		###   ------  Initializing Adaptive Mesh Refinement  ----------####
 		self.cleaning_util = cleaning_utility.CleaningUtility(self.problem_path)
 
@@ -233,7 +233,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 				                                                                           gid_output_utility,
 				                                                                           self.conditions_util,
 				                                                                           self.problem_path)
-			self.activate_AMR = self.AMR_util.Initialize() # check the amr criteria
+			self.activate_AMR = self.AMR_util.Initialize() # check the amr criteria'''
 
 
 #============================================================================================================================

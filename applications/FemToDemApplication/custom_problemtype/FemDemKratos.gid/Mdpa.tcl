@@ -75,7 +75,7 @@ proc WriteMdpa { basename dir problemtypedir } {
     for {set i 0} {$i < [llength $Groups]} {incr i} {
          # Elements Property
         set BodyElemsProp [dict get $PropertyDict [lindex [lindex $Groups $i] 1]]
-        WriteElements FileVar [lindex $Groups $i] triangle AleCornVelElement $BodyElemsProp Triangle2D3Connectivities
+        WriteElements FileVar [lindex $Groups $i] triangle FemDem2DElement $BodyElemsProp Triangle2D3Connectivities
     }
     puts $FileVar ""
 

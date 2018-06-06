@@ -101,7 +101,10 @@ class FEMDEM_Solution:
 				self.FEM_Solution.model_processes.ExecuteBeforeSolutionLoop()
 				self.FEM_Solution.model_processes.ExecuteInitializeSolutionStep()
 
+		Wait()
 		self.FEM_Solution.InitializeSolutionStep()
+
+
 		# just for testing ->Remove
 		#self.FEM_Solution.GraphicalOutputPrintOutput()
 		# *********************** 

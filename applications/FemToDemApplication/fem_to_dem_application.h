@@ -30,7 +30,7 @@
 
 //#include "custom_elements/zaratipito_element.hpp"
 #include "custom_constitutive/zarate_law.hpp"
-#include "custom_elements/alecornvel_element.hpp"
+#include "custom_elements/femdem2d_element.hpp"
 #include "custom_elements/femdem3d_element.hpp"
 #include "custom_elements/romfemdem3d_element.hpp"
 
@@ -102,8 +102,7 @@ protected:
 private:
 	
 	// Elements
-	//const ZaratipitoElement mZaratipitoElement;
-	const AleCornVelElement mAleCornVelElement;
+	const FemDem2DElement mFemDem2DElement;
 	const FemDem3DElement   mFemDem3DElement;
 	const RomFemDem3DElement mRomFemDem3DElement;
 

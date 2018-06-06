@@ -57,7 +57,7 @@ namespace Kratos {
 
 KratosFemToDemApplication::KratosFemToDemApplication(): KratosApplication("FemToDemApplication"),
 //mZaratipitoElement(0, Element::GeometryType::Pointer(new Triangle2D3 <Node<3> >(Element::GeometryType::PointsArrayType(3)))),
-mAleCornVelElement(0, Element::GeometryType::Pointer(new Triangle2D3 <Node<3> >(Element::GeometryType::PointsArrayType(3)))),
+mFemDem2DElement(0, Element::GeometryType::Pointer(new Triangle2D3 <Node<3> >(Element::GeometryType::PointsArrayType(3)))),
 mFemDem3DElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4)))),
 mRomFemDem3DElement(0, Element::GeometryType::Pointer(new Tetrahedra3D4 <Node<3> >(Element::GeometryType::PointsArrayType(4))))
 {}
@@ -91,7 +91,6 @@ void KratosFemToDemApplication::Register()
 	KRATOS_REGISTER_VARIABLE(SMOOTHING)
 	KRATOS_REGISTER_VARIABLE(IS_DAMAGED)
 	KRATOS_REGISTER_VARIABLE(TANGENT_CONSTITUTIVE_TENSOR)
-	//KRATOS_REGISTER_VARIABLE(CHARACTERISTIC_LENGTH)
 	KRATOS_REGISTER_VARIABLE(MESH_REFINED)
 	KRATOS_REGISTER_VARIABLE(IS_DYNAMIC)
 	KRATOS_REGISTER_VARIABLE(STRESS_THRESHOLD)
@@ -132,6 +131,7 @@ void KratosFemToDemApplication::Register()
 	KRATOS_REGISTER_VARIABLE(FRACTURE_ENERGY_STEEL);
 	KRATOS_REGISTER_VARIABLE(PLASTIC_DISSIPATION_CAPAP);
 	KRATOS_REGISTER_VARIABLE(EQUIVALENT_STRESS_VM);
+
 	// Hardening variables plasticity
 	KRATOS_REGISTER_VARIABLE(HARDENING_LAW);
 	KRATOS_REGISTER_VARIABLE(MAXIMUM_STRESS);
@@ -141,8 +141,7 @@ void KratosFemToDemApplication::Register()
 	KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS(SURFACE_LOAD);
 	
 	//Register element
-	//KRATOS_REGISTER_ELEMENT("ZaratipitoElement", mZaratipitoElement)
-	KRATOS_REGISTER_ELEMENT("AleCornVelElement", mAleCornVelElement)
+	KRATOS_REGISTER_ELEMENT("FemDem2DElement", mFemDem2DElement)
 	KRATOS_REGISTER_ELEMENT("FemDem3DElement", mFemDem3DElement)
 	KRATOS_REGISTER_ELEMENT("RomFemDem3DElement", mRomFemDem3DElement)
 			

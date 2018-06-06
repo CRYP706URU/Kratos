@@ -4,7 +4,7 @@
 #include <string>
 #include "includes/constitutive_law.h"
 #include "custom_constitutive/zarate_law.hpp"
-#include "alecornvel_element.hpp"
+#include "femdem2d_element.hpp"
 #include "includes/element.h"
 #include "fem_to_dem_application_variables.h"
 #include "includes/kratos_flags.h"
@@ -16,7 +16,7 @@ namespace Kratos
 	//***********************DEFAULT CONSTRUCTOR******************************************
 	//************************************************************************************
 
-	AleCornVelElement::AleCornVelElement(IndexType NewId, GeometryType::Pointer pGeometry)
+	FemDem2DElement::FemDem2DElement(IndexType NewId, GeometryType::Pointer pGeometry)
 		: SmallDisplacementElement(NewId, pGeometry)
 	{
 		//DO NOT ADD DOFS HERE!!!
@@ -24,7 +24,7 @@ namespace Kratos
 	//******************************CONSTRUCTOR*******************************************
 	//************************************************************************************
 
-	AleCornVelElement::AleCornVelElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
+	FemDem2DElement::FemDem2DElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
 		:SmallDisplacementElement(NewId, pGeometry, pProperties)
 	{
 		//BY DEFAULT, THE GEOMETRY WILL DEFINE THE INTEGRATION METHOD
@@ -34,7 +34,7 @@ namespace Kratos
 	//******************************COPY CONSTRUCTOR**************************************
 	//************************************************************************************
 
-	AleCornVelElement::AleCornVelElement(AleCornVelElement const& rOther)
+	FemDem2DElement::FemDem2DElement(FemDem2DElement const& rOther)
 		:SmallDisplacementElement(rOther)
 	{
 		//ALL MEMBER VARIABLES THAT MUST BE KEPT AFTER COPYING AN ELEMENT HAVE TO BE DEFINED HERE
@@ -44,7 +44,7 @@ namespace Kratos
 	//*******************************ASSIGMENT OPERATOR***********************************
 	//************************************************************************************
 
-	AleCornVelElement&  AleCornVelElement::operator=(AleCornVelElement const& rOther)
+	FemDem2DElement&  FemDem2DElement::operator=(FemDem2DElement const& rOther)
 	{
 		//ALL MEMBER VARIABLES THAT MUST BE KEPT IN AN "=" OPERATION NEEDS TO BE COPIED HERE
 
@@ -55,35 +55,35 @@ namespace Kratos
 	//*********************************OPERATIONS*****************************************
 	//************************************************************************************
 
-	Element::Pointer AleCornVelElement::Create(IndexType NewId, NodesArrayType const& rThisNodes, PropertiesType::Pointer pProperties) const
+	Element::Pointer FemDem2DElement::Create(IndexType NewId, NodesArrayType const& rThisNodes, PropertiesType::Pointer pProperties) const
 	{
 		//NEEDED TO CREATE AN ELEMENT   
-		return Element::Pointer(new AleCornVelElement(NewId, GetGeometry().Create(rThisNodes), pProperties));
+		return Element::Pointer(new FemDem2DElement(NewId, GetGeometry().Create(rThisNodes), pProperties));
 	}
 
 
 	//************************************CLONE*******************************************
 	//************************************************************************************
 
-	Element::Pointer AleCornVelElement::Clone(IndexType NewId, NodesArrayType const& rThisNodes) const
+	Element::Pointer FemDem2DElement::Clone(IndexType NewId, NodesArrayType const& rThisNodes) const
 	{
 
 		//YOU CREATE A NEW ELEMENT CLONING THEIR VARIABLES
 		//ALL MEMBER VARIABLES THAT MUST BE CLONED HAVE TO BE DEFINED HERE
 
-		AleCornVelElement NewElement(NewId, GetGeometry().Create(rThisNodes), pGetProperties());
+		FemDem2DElement NewElement(NewId, GetGeometry().Create(rThisNodes), pGetProperties());
 
-		return Element::Pointer(new AleCornVelElement(NewElement));
+		return Element::Pointer(new FemDem2DElement(NewElement));
 	}
 
 	//*******************************DESTRUCTOR*******************************************
 	//************************************************************************************
 
-	AleCornVelElement::~AleCornVelElement()
+	FemDem2DElement::~FemDem2DElement()
 	{
 	}
 
-	void AleCornVelElement::InitializeSolutionStep(ProcessInfo& rCurrentProcessInfo)
+	void FemDem2DElement::InitializeSolutionStep(ProcessInfo& rCurrentProcessInfo)
 	{
 
 		// After the mapping, the thresholds of the edges ( are equal to 0.0) are imposed equal to the IP threshold
@@ -110,7 +110,7 @@ namespace Kratos
 
 	}
 
-	void AleCornVelElement::FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo)
+	void FemDem2DElement::FinalizeSolutionStep(ProcessInfo& rCurrentProcessInfo)
 	{
 		double CurrentfSigma = 0.0, damage_element = 0.0;
 		
@@ -165,7 +165,7 @@ namespace Kratos
 		}
 	}
 
-	void AleCornVelElement::InitializeNonLinearIteration(ProcessInfo& rCurrentProcessInfo)
+	void FemDem2DElement::InitializeNonLinearIteration(ProcessInfo& rCurrentProcessInfo)
 	{
 		//*****************************
 		KRATOS_TRY
@@ -294,7 +294,7 @@ namespace Kratos
 	}
 
 	
-	void AleCornVelElement::CalculateLocalSystem (MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+	void FemDem2DElement::CalculateLocalSystem (MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
 	{
 		KRATOS_TRY
 
@@ -471,7 +471,7 @@ namespace Kratos
 		KRATOS_CATCH("")
 	}
 
-	void AleCornVelElement::CalculateDeformationMatrix(Matrix& rB, const Matrix& rDN_DX)
+	void FemDem2DElement::CalculateDeformationMatrix(Matrix& rB, const Matrix& rDN_DX)
 	{
 		const unsigned int number_of_nodes = GetGeometry().PointsNumber();
 		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
@@ -497,7 +497,7 @@ namespace Kratos
 		}
 	}
 
-	void AleCornVelElement::CalculateConstitutiveMatrix(Matrix& rConstitutiveMatrix, const double &rYoungModulus,
+	void FemDem2DElement::CalculateConstitutiveMatrix(Matrix& rConstitutiveMatrix, const double &rYoungModulus,
 		const double &rPoissonCoefficient)
 	{
 		rConstitutiveMatrix.clear();
@@ -522,7 +522,7 @@ namespace Kratos
 		}
 	}
 
-	void AleCornVelElement::CalculateDN_DX(Matrix& rDN_DX, int PointNumber)
+	void FemDem2DElement::CalculateDN_DX(Matrix& rDN_DX, int PointNumber)
 	{
 		const unsigned int number_of_nodes = GetGeometry().size();
 		const unsigned int dimension = GetGeometry().WorkingSpaceDimension();
@@ -557,7 +557,7 @@ namespace Kratos
 			rDN_DX = prod(DN_De[PointNumber], InvJ);
 	}
 
-	void AleCornVelElement::CalculateInfinitesimalStrain(Vector& rStrainVector, const Matrix& rDN_DX)
+	void FemDem2DElement::CalculateInfinitesimalStrain(Vector& rStrainVector, const Matrix& rDN_DX)
 	{
 		KRATOS_TRY
 
@@ -589,23 +589,23 @@ namespace Kratos
 		KRATOS_CATCH("")
 	}
 
-	void AleCornVelElement::CalculateStressVector(Vector& rStressVector, const Matrix& rConstitutiveMAtrix, const Vector& rInfinitesimalStrainVector)
+	void FemDem2DElement::CalculateStressVector(Vector& rStressVector, const Matrix& rConstitutiveMAtrix, const Vector& rInfinitesimalStrainVector)
 	{
 		noalias(rStressVector) = prod(rConstitutiveMAtrix, rInfinitesimalStrainVector);
 	}
 
-	void AleCornVelElement::CalculatePrincipalStress(Vector& PrincipalStressVector, const Vector StressVector)
+	void FemDem2DElement::CalculatePrincipalStress(Vector& PrincipalStressVector, const Vector StressVector)
 	{
 		PrincipalStressVector.resize(2);
 		PrincipalStressVector[0] = 0.5*(StressVector[0] + StressVector[1]) + std::sqrt(std::pow(0.5*(StressVector[0] - StressVector[1]), 2) + std::pow(StressVector[2], 2));
 		PrincipalStressVector[1] = 0.5*(StressVector[0] + StressVector[1]) - std::sqrt(std::pow(0.5*(StressVector[0] - StressVector[1]), 2) + std::pow(StressVector[2], 2));
 	}
 
-	void AleCornVelElement::FinalizeNonLinearIteration(ProcessInfo& CurrentProcessInfo)
+	void FemDem2DElement::FinalizeNonLinearIteration(ProcessInfo& CurrentProcessInfo)
 	{
 	}
 
-	void AleCornVelElement::AverageVector(Vector& rAverageVector, const Vector& v, const Vector& w)
+	void FemDem2DElement::AverageVector(Vector& rAverageVector, const Vector& v, const Vector& w)
 	{
 		int n = v.size();
 		int m = w.size();
@@ -617,7 +617,7 @@ namespace Kratos
 		}
 	}
 
-	void AleCornVelElement::GetValueOnIntegrationPoints(
+	void FemDem2DElement::GetValueOnIntegrationPoints(
 		const Variable<double>& rVariable, 
 		std::vector<double>& rValues,
 		const ProcessInfo& rCurrentProcessInfo
@@ -631,7 +631,7 @@ namespace Kratos
 		
 	}
 
-	void AleCornVelElement::GetValueOnIntegrationPoints(
+	void FemDem2DElement::GetValueOnIntegrationPoints(
 		const Variable<Vector>& rVariable,
 		std::vector<Vector>& rValues,
 		const ProcessInfo& rCurrentProcessInfo
@@ -693,7 +693,7 @@ namespace Kratos
 	}
 
 	// DOUBLE VARIABLES
-	void AleCornVelElement::CalculateOnIntegrationPoints(
+	void FemDem2DElement::CalculateOnIntegrationPoints(
 		const Variable<double>& rVariable, 
 		std::vector<double>& rOutput, 
 		const ProcessInfo& rCurrentProcessInfo)
@@ -725,7 +725,7 @@ namespace Kratos
 	}
 
 	// VECTOR VARIABLES
-	void AleCornVelElement::CalculateOnIntegrationPoints(
+	void FemDem2DElement::CalculateOnIntegrationPoints(
 		const Variable<Vector>& rVariable, 
 		std::vector<Vector>& rOutput, 
 		const ProcessInfo& rCurrentProcessInfo
@@ -786,7 +786,7 @@ namespace Kratos
 		
 	}
 
-	double AleCornVelElement::CalculateLchar(AleCornVelElement* CurrentElement, const Element& NeibElement, int cont)
+	double FemDem2DElement::CalculateLchar(FemDem2DElement* CurrentElement, const Element& NeibElement, int cont)
 	{
 		Geometry< Node < 3 > >& NodesElem1 = CurrentElement->GetGeometry();  // 3 nodes of the Element 1
 		Geometry< Node < 3 > > NodesElem2  = NeibElement.GetGeometry();      // "         " 2
@@ -828,7 +828,7 @@ namespace Kratos
 	}
 
 
-	void AleCornVelElement::Get2MaxValues(Vector& MaxValues, double a, double b, double c)
+	void FemDem2DElement::Get2MaxValues(Vector& MaxValues, double a, double b, double c)
 	{
 		MaxValues.resize(2);
 		Vector V;
@@ -851,7 +851,7 @@ namespace Kratos
 		MaxValues[1] = V[1];
 	}
 
-	void AleCornVelElement::Get2MinValues(Vector& MaxValues, double a, double b, double c)
+	void FemDem2DElement::Get2MinValues(Vector& MaxValues, double a, double b, double c)
 	{
 		MaxValues.resize(2);
 		Vector V;
@@ -873,16 +873,16 @@ namespace Kratos
 		MaxValues[0] = V[1];
 		MaxValues[1] = V[0];
 	}
-	double AleCornVelElement::Calculate_I1_Invariant(double sigma1, double sigma2) { return sigma1 + sigma2; }
-	double AleCornVelElement::Calculate_J2_Invariant(double sigma1, double sigma2)
+	double FemDem2DElement::Calculate_I1_Invariant(double sigma1, double sigma2) { return sigma1 + sigma2; }
+	double FemDem2DElement::Calculate_J2_Invariant(double sigma1, double sigma2)
 	{
 		return  (std::pow((sigma1 - sigma2), 2) + std::pow(sigma1, 2) + std::pow(sigma2, 2)) / 6.0;
 	}
-	double AleCornVelElement::Calculate_J3_Invariant(double sigma1, double sigma2, double I1)
+	double FemDem2DElement::Calculate_J3_Invariant(double sigma1, double sigma2, double I1)
 	{
 		return	(sigma1 - I1 / 3.0)*((sigma2 - I1 / 3.0))*(-I1 / 3.0);
 	}
-	double AleCornVelElement::Calculate_Theta_Angle(double J2, double J3)
+	double FemDem2DElement::Calculate_Theta_Angle(double J2, double J3)
 	{
 		double sint3;
 		sint3 = (-3.0*std::sqrt(3)*J3) / (2 * J2*std::sqrt(J2));
@@ -891,7 +891,7 @@ namespace Kratos
 		return std::asin(sint3) / 3.0;
 	}
 
-	void AleCornVelElement::CalculateMassMatrix(MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo)
+	void FemDem2DElement::CalculateMassMatrix(MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo)
 	{
 		KRATOS_TRY
 
@@ -956,7 +956,7 @@ namespace Kratos
 
 		KRATOS_CATCH("")
 	}
-	Vector& AleCornVelElement::CalculateVolumeForce(Vector& rVolumeForce, const Vector& rN)
+	Vector& FemDem2DElement::CalculateVolumeForce(Vector& rVolumeForce, const Vector& rN)
 	{
 		KRATOS_TRY
 
@@ -984,7 +984,7 @@ namespace Kratos
 		KRATOS_CATCH("")
 	}
 
-	double AleCornVelElement::GetMaxValue(Vector Strain)
+	double FemDem2DElement::GetMaxValue(Vector Strain)
 	{
 		Vector V;
 		int n = Strain.size();
@@ -1010,7 +1010,7 @@ namespace Kratos
 		return V[n - 1];
 	}
 
-	double AleCornVelElement::GetMaxAbsValue(Vector Strain)
+	double FemDem2DElement::GetMaxAbsValue(Vector Strain)
 	{
 		Vector V;
 		int n = Strain.size();
@@ -1036,7 +1036,7 @@ namespace Kratos
 		return V[n - 1];
 	}
 
-	double AleCornVelElement::GetMinAbsValue(Vector Strain)
+	double FemDem2DElement::GetMinAbsValue(Vector Strain)
 	{
 		Vector V;
 		V.resize(3);
@@ -1060,7 +1060,7 @@ namespace Kratos
 
 
 	// ****** Tangent Constitutive Tensor by Numerical Derivation ******
-	void AleCornVelElement::PerturbateStrainComponent(
+	void FemDem2DElement::PerturbateStrainComponent(
 		const Vector& rStrainVector, 
 		Vector& PertubatedStrain, 
 		const double perturbation, 
@@ -1071,7 +1071,7 @@ namespace Kratos
 		PertubatedStrain[component] += perturbation;
 	}
 
-	double AleCornVelElement::CalculatePerturbation(const Vector& StrainVector, int component)
+	double FemDem2DElement::CalculatePerturbation(const Vector& StrainVector, int component)
 	{
 		double Pert = 0.0;
 		if (StrainVector[component] != 0.0) Pert = (1e-5)*StrainVector[component];
@@ -1081,7 +1081,7 @@ namespace Kratos
 		return Pert;
 	}
 
-	void  AleCornVelElement::CalculateTangentTensor(
+	void  FemDem2DElement::CalculateTangentTensor(
 		Matrix& rTangentTensor, 
 		const Vector& StrainVector, 
 		const Vector& IntegratedStressVector, 
@@ -1147,7 +1147,7 @@ namespace Kratos
 		}
 	}
 
-	void AleCornVelElement::TangentModifiedMohrCoulombCriterion(
+	void FemDem2DElement::TangentModifiedMohrCoulombCriterion(
 		Vector& rIntegratedStress, 
 		double& damage, 
 		const Vector& StressVector, 
@@ -1227,7 +1227,7 @@ namespace Kratos
 
 
 	// ******* DAMAGE MECHANICS YIELD SURFACES AND EXPONENTIAL SOFTENING ********
-	void AleCornVelElement::IntegrateStressDamageMechanics(
+	void FemDem2DElement::IntegrateStressDamageMechanics(
 		Vector& rIntegratedStress, 
 		double& damage,
 		const Vector StrainVector, 
@@ -1246,7 +1246,7 @@ namespace Kratos
 		else { KRATOS_ERROR << " Yield Surface not defined "; }
 	}
 
-	void AleCornVelElement::ModifiedMohrCoulombCriterion(Vector& rIntegratedStress, double& damage, const Vector& StressVector,int cont, double l_char)
+	void FemDem2DElement::ModifiedMohrCoulombCriterion(Vector& rIntegratedStress, double& damage, const Vector& StressVector,int cont, double l_char)
 	{
 		rIntegratedStress.resize(3);
 		Vector PrincipalStressVector = ZeroVector(2);
@@ -1315,7 +1315,7 @@ namespace Kratos
 		rIntegratedStress *= (1 - damage);
 	}
 
-	void AleCornVelElement::RankineCriterion(
+	void FemDem2DElement::RankineCriterion(
 		Vector& rIntegratedStress, 
 		double& damage, 
 		const Vector& StressVector, 
@@ -1365,7 +1365,7 @@ namespace Kratos
 		rIntegratedStress *= (1 - damage);
 	}
 
-	void AleCornVelElement::DruckerPragerCriterion(
+	void FemDem2DElement::DruckerPragerCriterion(
 		Vector& rIntegratedStress, 
 		double& damage, 
 		const Vector& StressVector, 
@@ -1431,7 +1431,7 @@ namespace Kratos
 		rIntegratedStress *= (1 - damage);
 	}
 
-	void AleCornVelElement::SimoJuCriterion(
+	void FemDem2DElement::SimoJuCriterion(
 		Vector& rIntegratedStress, 
 		double& damage,  
 		const Vector& StrainVector,  
@@ -1500,7 +1500,7 @@ namespace Kratos
 		rIntegratedStress *= (1 - damage);
 	}
 
-	void AleCornVelElement::RankineFragileLaw(
+	void FemDem2DElement::RankineFragileLaw(
 		Vector& rIntegratedStress, 
 		double& damage, 
 		const Vector& StressVector, 
@@ -1546,7 +1546,7 @@ namespace Kratos
 		rIntegratedStress *= (1 - damage);
 	}
 
-	void AleCornVelElement::SetValueOnIntegrationPoints(
+	void FemDem2DElement::SetValueOnIntegrationPoints(
 		const Variable<double>& rVariable,
 		std::vector<double>& rValues,
 		const ProcessInfo& rCurrentProcessInfo
@@ -1558,7 +1558,7 @@ namespace Kratos
 		}
 	}
 
-	void AleCornVelElement::SetValueOnIntegrationPoints(
+	void FemDem2DElement::SetValueOnIntegrationPoints(
 		const Variable<Vector>& rVariable,
 		std::vector<Vector>& rValues,
 		const ProcessInfo& rCurrentProcessInfo
