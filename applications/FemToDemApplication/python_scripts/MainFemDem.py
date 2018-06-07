@@ -263,30 +263,16 @@ class FEM_Solution(MainSolidFEM.Solution):
 			"echo_level"               : 0
         }""")
 
-		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part, skin_detection_process_param)
-		skin_detection_process.Execute()
+		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part,
+		                                                                   skin_detection_process_param)
+		#skin_detection_process.Execute()
+
 		#print(self.main_model_part.GetSubModelPart("SkinDEMModelPart"))
 		#for node in self.main_model_part.GetSubModelPart("SkinDEMModelPart").Nodes:
 		#	print(node.Id)
 		#print("skin process executed")
 		#Wait()
 
-		self.delta_time = self.main_model_part.ProcessInfo[KratosMultiphysics.DELTA_TIME]
-
-		self.time = self.time + self.delta_time
-		self.step = self.step + 1
-
-		self.main_model_part.ProcessInfo[KratosMultiphysics.STEP] = self.step
-
-		if self.step == 3:
-			print("4")
-			Wait()
-
-		self.main_model_part.CloneTimeStep(self.time)
-
-		if self.step == 3:
-			print("5")
-			Wait()
 
 		print(" [STEP:",self.step," TIME:", self.time,"]")
 
@@ -370,7 +356,10 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 		self.model_processes.ExecuteFinalize()
 
-		print("::[KSM Simulation]:: Analysis -END- ")
+		print(" ")
+		print("=================================================")
+		print(" - Kratos FemDem Application Calculation End   - ")
+		print("=================================================")
 		print(" ")
 
 		#### END SOLUTION ####

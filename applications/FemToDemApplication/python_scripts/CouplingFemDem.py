@@ -73,7 +73,7 @@ class FEMDEM_Solution:
 		if self.DoRemeshing:
 			self.RemeshingProcessMMG.ExecuteBeforeSolutionLoop()
 
-		while(self.FEM_Solution.time < self.FEM_Solution.end_time):
+		while(self.FEM_Solution.time <= self.FEM_Solution.end_time):
 			
 			self.InitializeSolutionStep()
 			self.SolveSolutionStep()
@@ -82,26 +82,40 @@ class FEMDEM_Solution:
 #============================================================================================================================
 	def InitializeSolutionStep(self):
 
+		# modified for the remeshing
+		self.FEM_Solution.delta_time = self.FEM_Solution.main_model_part.ProcessInfo[KratosMultiphysics.DELTA_TIME]
+		self.FEM_Solution.time = self.FEM_Solution.time + self.FEM_Solution.delta_time
+		self.FEM_Solution.main_model_part.CloneTimeStep(self.FEM_Solution.time)
+		self.FEM_Solution.step = self.FEM_Solution.step + 1
+		self.FEM_Solution.main_model_part.ProcessInfo[KratosMultiphysics.STEP] = self.FEM_Solution.step
+
 		if self.DoRemeshing:
 			is_remeshing = self.CheckIfHasRemeshed()
 		
 			# Perform remeshing
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
+			#print(is_remeshing)
+			#print(self.FEM_Solution.main_model_part.GetSubModelPart("Body_Part-auto-1"))
+			#print(self.FEM_Solution.main_model_part)
+			#Wait()
+
 			if is_remeshing:
 				# Remove DEMS from previous mesh
 				self.SpheresModelPart.Elements.clear()
 				self.SpheresModelPart.Nodes.clear()
+				self.GenerateDemAfterRemeshing()  # TODO
 
 				# Initialize processes after remeshing
 				#self.FEM_Solution.solver.Clear()
-				self.FEM_Solution.solver.Initialize()
+				#self.FEM_Solution.solver.Initialize()
+				self.InitializeMMGvariables()
 				self.FEM_Solution.model_processes = self.FEM_Solution.AddProcesses()
 				self.FEM_Solution.model_processes.ExecuteInitialize()
 				self.FEM_Solution.model_processes.ExecuteBeforeSolutionLoop()
 				self.FEM_Solution.model_processes.ExecuteInitializeSolutionStep()
 
-		Wait()
+		#Wait()
 		self.FEM_Solution.InitializeSolutionStep()
 
 
@@ -120,11 +134,14 @@ class FEMDEM_Solution:
 		self.FEM_Solution.solver.Solve()
 		########################################################
 
-		self.GenerateDEM()            # we create the new DEM of this time step
+		# we create the new DEM of this time step
+		self.GenerateDEM()            
 		self.SpheresModelPart = self.ParticleCreatorDestructor.GetSpheresModelPart()
 		self.CheckForPossibleIndentations()
 		self.CheckInactiveNodes()
-		self.UpdateDEMVariables()     # We update coordinates, displ and velocities of the DEM according to FEM
+
+		# We update coordinates, displ and velocities of the DEM according to FEM
+		self.UpdateDEMVariables()    
 
 		# Extrapolate the VonMises normalized stress to nodes (remeshing)
 		KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
@@ -147,20 +164,11 @@ class FEMDEM_Solution:
 
 		self.DEM_Solution.DEMFEMProcedures.MoveAllMeshes(self.DEM_Solution.all_model_parts, self.DEM_Solution.time, self.DEM_Solution.dt)
 
-		self.UpdateDEMVariables() # to print DEM with the FEM coordinates
+		# to print DEM with the FEM coordinates
+		self.UpdateDEMVariables() 
 
 		# DEM GiD print output
-		if self.DEM_Solution.step == 1: # always print the 1st step
-			self.DEM_Solution.PrintResultsForGid(self.DEM_Solution.time)
-			self.DEM_Solution.time_old_print = self.DEM_Solution.time
-		else:
-			time_to_print = self.DEM_Solution.time - self.DEM_Solution.time_old_print
-
-			if (self.DEM_Solution.DEM_parameters["OutputTimeStep"].GetDouble() - time_to_print < 1e-2 * self.DEM_Solution.dt):
-
-				self.DEM_Solution.PrintResultsForGid(self.DEM_Solution.time)
-				self.DEM_Solution.time_old_print = self.DEM_Solution.time
-
+		self.PrintDEMResults()
 
 		self.DEM_Solution.FinalizeTimeStep(self.DEM_Solution.time)
 
@@ -201,7 +209,6 @@ class FEMDEM_Solution:
 		self.FEM_Solution.main_model_part.RemoveSubModelPart("SkinDEMModelPart")
 
 		
-
 #============================================================================================================================
 	def Finalize(self):
 
@@ -211,7 +218,6 @@ class FEMDEM_Solution:
 		
 		if self.DoRemeshing:
 			self.RemeshingProcessMMG.ExecuteFinalize()
-
 
 
 #============================================================================================================================
@@ -512,7 +518,6 @@ class FEMDEM_Solution:
 				Element.SetValue(KratosFemDem.DEM_GENERATED, True)
 
 
-
 #============================================================================================================================
 	def CalculateDistanceBetweenNodes(self, Node1, Node2):
 		# only in 2D
@@ -600,8 +605,11 @@ class FEMDEM_Solution:
 			if NumberOfActiveElements == 0 and node.GetValue(KratosFemDem.INACTIVE_NODE) == False:
 
 				Id = node.Id
-				DEMnode = self.SpheresModelPart.GetNode(Id)
 				node.SetValue(KratosFemDem.INACTIVE_NODE, True)
+				node.Set(KratosMultiphysics.TO_ERASE, True) # added
+				#print("nodo eliminado ", Id)
+
+				DEMnode = self.SpheresModelPart.GetNode(Id)
 				DEMnode.SetValue(KratosFemDem.INACTIVE_NODE, True)
 				DEMnode.Set(KratosMultiphysics.TO_ERASE, True)
 
@@ -610,6 +618,7 @@ class FEMDEM_Solution:
 
 		# Remove inactive nodes
 		self.SpheresModelPart.RemoveElementsFromAllLevels(KratosMultiphysics.TO_ERASE)
+		self.FEM_Solution.main_model_part.RemoveNodesFromAllLevels(KratosMultiphysics.TO_ERASE) # added
 
 #============================================================================================================================
 	def TransferNodalForcesToFEM(self):
@@ -823,3 +832,17 @@ class FEMDEM_Solution:
 		return is_remeshed
 
 
+#============================================================================================================================		
+
+	def PrintDEMResults(self):
+
+		if self.DEM_Solution.step == 1: # always print the 1st step
+			self.DEM_Solution.PrintResultsForGid(self.DEM_Solution.time)
+			self.DEM_Solution.time_old_print = self.DEM_Solution.time
+		else:
+			time_to_print = self.DEM_Solution.time - self.DEM_Solution.time_old_print
+
+			if (self.DEM_Solution.DEM_parameters["OutputTimeStep"].GetDouble() - time_to_print < 1e-2 * self.DEM_Solution.dt):
+
+				self.DEM_Solution.PrintResultsForGid(self.DEM_Solution.time)
+				self.DEM_Solution.time_old_print = self.DEM_Solution.time

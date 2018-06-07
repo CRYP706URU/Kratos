@@ -137,7 +137,7 @@ namespace Kratos
 			double old_threshold = this->GetValue(STRESS_THRESHOLD);
 			this->SetValue(INITIAL_THRESHOLD, old_threshold);
 		}
-
+		
 		this->ResetNonConvergedVars();
 		this->SetToZeroIteration();
 
