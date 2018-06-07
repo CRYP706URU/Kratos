@@ -146,6 +146,10 @@ class FEMDEM_Solution:
 		# Extrapolate the VonMises normalized stress to nodes (remeshing)
 		KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
 
+		KratosFemDem.DemAfterRemeshIdentificatorProcess(self.FEM_Solution.main_model_part).Execute()
+
+		Wait()
+
 		self.DEM_Solution.InitializeTimeStep()
 		self.DEM_Solution.time = self.FEM_Solution.time
 		self.DEM_Solution.step = self.FEM_Solution.step

@@ -265,13 +265,14 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part,
 		                                                                   skin_detection_process_param)
-		#skin_detection_process.Execute()
+		skin_detection_process.Execute()
 
 		#print(self.main_model_part.GetSubModelPart("SkinDEMModelPart"))
-		#for node in self.main_model_part.GetSubModelPart("SkinDEMModelPart").Nodes:
-		#	print(node.Id)
-		#print("skin process executed")
-		#Wait()
+		'''for node in self.main_model_part.GetSubModelPart("SkinDEMModelPart").Nodes:
+			print(node.Id)
+			print(node.GetSolutionStepValue(KratosMultiphysics.DISPLACEMENT))
+		print("skin process executed")
+		Wait()'''
 
 
 		print(" [STEP:",self.step," TIME:", self.time,"]")
@@ -310,7 +311,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 		self.model_processes.ExecuteAfterOutputStep()
 
 
-		if(self.activate_AMR):
+		'''if(self.activate_AMR):
 			self.refine, self.last_mesh = self.AMR_util.CheckAMR(self.time)
 			
 			if(self.refine):
@@ -343,7 +344,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 				# just to to see what's has been mapped
 				#self.GraphicalOutputPrintOutput()	
 			elif(self.last_mesh):
-				self.AMR_util.Finalize(self.main_model_part, self.current_id)
+				self.AMR_util.Finalize(self.main_model_part, self.current_id)'''
 
 
 

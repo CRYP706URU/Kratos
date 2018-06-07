@@ -5,22 +5,16 @@
 //   Revision:            $Revision: $
 
 // External includes
-//#include <pybind11/pybind11.h>
-//#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 
 // Project includes
-//#include "includes/define.h"
+
 #include "includes/model_part.h"
 #include "fem_to_dem_application_variables.h"
 //#include "processes/process.h"
-#include "custom_python/add_custom_processes_to_python.h"
-//#include "spaces/ublas_space.h"
-//#include "includes/kratos_parameters.h"
-
-//#include "processes/find_elements_neighbours_process.h"
-//#include "custom_processes/adaptive_mesh_refinement_process.hpp"
-//#include "custom_processes/mapping_variables_process.hpp"  
+#include "custom_python/add_custom_processes_to_python.h" 
 #include "custom_processes/stress_to_nodes_process.hpp"  
+#include "custom_processes/dem_after_remesh_identificator_process.hpp" 
 
 namespace Kratos
 {
@@ -59,6 +53,12 @@ namespace Kratos
 				(m,"StressToNodesProcess")
 				.def(init < ModelPart&, unsigned int >())
 				.def("Execute", &StressToNodesProcess::Execute)
+				;
+			
+			class_<DemAfterRemeshIdentificatorProcess, DemAfterRemeshIdentificatorProcess::Pointer,  Process>
+				(m,"DemAfterRemeshIdentificatorProcess")
+				.def(init < ModelPart&>())
+				.def("Execute", &DemAfterRemeshIdentificatorProcess::Execute)
 				;
 
 		}

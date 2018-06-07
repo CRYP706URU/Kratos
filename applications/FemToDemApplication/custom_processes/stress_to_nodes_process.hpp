@@ -34,6 +34,7 @@ namespace Kratos
         {
             Vector EffectiveStressVector;
             int NElems;
+            double Damage;
             
             NodeStresses()
             {
@@ -41,6 +42,7 @@ namespace Kratos
                 // 2D: sigma = [Sxx,Syy, 0, Sxy, 0, 0]
                 // 3D: sigma = [Sxx,Syy,Szz,Sxy,Syz,Sxz]
                 NElems = 0;
+				Damage = 0.0;
             }
         };
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,6 +83,7 @@ namespace Kratos
         {
 
             Vector GaussPointsStresses;
+            double damage;
 
 			
             // Loop over elements to extrapolate the stress to the nodes
@@ -96,15 +99,19 @@ namespace Kratos
                    
                     if((*it)->GetGeometry().PointsNumber() == 3) {
                         GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
+                        damage = (*it)->GetValue(DAMAGE_ELEMENT);
 
                         for(int i = 0; i < 3; i++) {
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0] += GaussPointsStresses[0];
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[1] += GaussPointsStresses[1];
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[3] += GaussPointsStresses[2];
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].NElems += 1;
+                            pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].Damage += damage;
                         }
                     } else {
                         GaussPointsStresses = (*it)->GetValue(STRESS_VECTOR);
+                        damage = (*it)->GetValue(DAMAGE_ELEMENT);
+                        
                         for (int i = 0; i < 4; i++) {
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[0] += GaussPointsStresses[0];
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[1] += GaussPointsStresses[1];
@@ -113,6 +120,7 @@ namespace Kratos
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[4] += GaussPointsStresses[4];
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].EffectiveStressVector[5] += GaussPointsStresses[5];
                             pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].NElems += 1;
+                            pNodeStressesVector[(*it)->GetGeometry().GetPoint(i).Id()-1].Damage += damage;
                         }
                     }
                 }
@@ -121,6 +129,7 @@ namespace Kratos
             // Ponderate over the elements coincident on that node
             for (unsigned int i = 0; i < mNNodes; i++) {
                 pNodeStressesVector[i].EffectiveStressVector = pNodeStressesVector[i].EffectiveStressVector / pNodeStressesVector[i].NElems;
+                pNodeStressesVector[i].Damage = pNodeStressesVector[i].Damage / pNodeStressesVector[i].NElems;
             }
 		
             // Loop to compute the max eq. stress in order to normalize
@@ -132,6 +141,9 @@ namespace Kratos
                 // Compute the norm of the vector -> Put VonMises stress
                 double& norm = it->GetSolutionStepValue(EQUIVALENT_NODAL_STRESS);
                 norm = this->CalculateStressInvariant(nodal_stress);
+
+                double& damage = it->GetSolutionStepValue(NODAL_DAMAGE);
+                damage = pNodeStressesVector[Id - 1].Damage;
             }
 			
             // Loop to compute the max eq. stress and normalize
