@@ -19,7 +19,6 @@
 #if !defined(KRATOS_DEM_AFTER_REMESH_IDENTIFICATOR_PROCESS_HPP_INCLUDED )
 #define  KRATOS_DEM_AFTER_REMESH_IDENTIFICATOR_PROCESS_HPP_INCLUDED
 
-
 #include "processes/process.h"
 #include "includes/model_part.h"
 #include "processes/find_nodal_neighbours_process.h"
@@ -38,9 +37,9 @@ public:
         : mrModelPart(rModelPart)
     {
     }
-    // It will create a submodel part containing nodes to include DEM on them,
-    // with the DEM radius assigned to each node to be created the DEM afterwards
-    // The modelpart must include the skinModelpart and damage extrapolated to nodes
+    /* It will create a submodel part containing nodes to include DEM on them,
+    with the DEM radius assigned to each node to be created the DEM afterwards
+    The modelpart must include the skinModelpart and damage extrapolated to nodes*/
     void Execute()
     {
         const std::string& name_dem_model_part = "DemAfterRemeshingNodes";
@@ -54,7 +53,7 @@ public:
         ModelPart::Pointer p_skin_model_part = mrModelPart.pGetSubModelPart("SkinDEMModelPart");
 
         for (ModelPart::NodeIterator it = (*p_skin_model_part).NodesBegin(); it != (*p_skin_model_part).NodesEnd(); ++it) {
-            const double nodal_damage = it->GetSolutionStepValue(NODAL_DAMAGE);
+            const double& nodal_damage = it->GetSolutionStepValue(NODAL_DAMAGE);
             if (nodal_damage > 0.94) {
                 p_auxiliar_model_part->AddNode(*(it.base()));
             }
@@ -67,34 +66,43 @@ public:
         for (ModelPart::NodeIterator it = (*p_auxiliar_model_part).NodesBegin(); it != (*p_auxiliar_model_part).NodesEnd(); ++it) {
 
             WeakPointerVector< Node<3> >& rneigh = (*it).GetValue(NEIGHBOUR_NODES);
-            std::vector<double> radius_dems;
-            double distance, radius_dem, min_radius;
+            std::vector<double> radius_is_dems, radius_not_dem;
+            double distance, radius_dem, min_radius, min_radius_is_dem, min_radius_no_dem;
 
             for (int i = 0; i < rneigh.size(); i++) {
 
                 distance = this->CalculateDistanceBetweenNodes((*it), rneigh[i]);
+
                 if (rneigh[i].GetValue(DEM_RADIUS) != 0.0) {
                     radius_dem = distance - rneigh[i].GetValue(DEM_RADIUS);
+                    radius_is_dems.push_back(radius_dem);
                 } else {
                     radius_dem = 0.5 * distance;
+                    radius_not_dem.push_back(radius_dem);
                 }
-                radius_dems.push_back(radius_dem);
             }
+            if (radius_is_dems.size() == 0) {
+                min_radius = this->GetMinimumValue(radius_not_dem);
+                (*it).SetValue(DEM_RADIUS, min_radius);
+            } else {
+                min_radius_is_dem = this->GetMinimumValue(radius_is_dems);
+                min_radius_no_dem = this->GetMinimumValue(radius_not_dem);
 
-            min_radius = this->GetMinimumValue(radius_dems);
-            (*it).SetValue(DEM_RADIUS, min_radius);
-
+                if (min_radius_is_dem > 1.5 * min_radius_no_dem) min_radius = min_radius_no_dem;
+                else min_radius = min_radius_is_dem;
+                (*it).SetValue(DEM_RADIUS, min_radius);
+            }
             // KRATOS_WATCH((*it).Id())
             // KRATOS_WATCH((*it).GetValue(DEM_RADIUS))
         }
 
-        // std::cout<< "******************"<<std::endl;
-        // for (ModelPart::NodeIterator it = (mrModelPart).NodesBegin(); it != (mrModelPart).NodesEnd(); ++it) {
-		// 	if ((*it).GetValue(DEM_RADIUS) != 0.0) {
-		// 		KRATOS_WATCH((*it).Id())
-		// 		KRATOS_WATCH((*it).GetValue(DEM_RADIUS))
-		// 	}
-        // }
+    //     std::cout<< "******************"<<std::endl;
+    //     for (ModelPart::NodeIterator it = (mrModelPart).NodesBegin(); it != (mrModelPart).NodesEnd(); ++it) {
+		 	//if ((*it).GetValue(DEM_RADIUS) != 0.0) {
+		 	//	KRATOS_WATCH((*it).Id())
+		 	//	KRATOS_WATCH((*it).GetValue(DEM_RADIUS))
+		 	//}
+    //     }
     }
 
     double CalculateDistanceBetweenNodes(

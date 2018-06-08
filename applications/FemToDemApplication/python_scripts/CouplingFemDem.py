@@ -104,8 +104,7 @@ class FEMDEM_Solution:
 				# Remove DEMS from previous mesh
 				self.SpheresModelPart.Elements.clear()
 				self.SpheresModelPart.Nodes.clear()
-				self.GenerateDemAfterRemeshing()  # TODO
-
+				
 				# Initialize processes after remeshing
 				#self.FEM_Solution.solver.Clear()
 				#self.FEM_Solution.solver.Initialize()
@@ -118,9 +117,13 @@ class FEMDEM_Solution:
 		#Wait()
 		self.FEM_Solution.InitializeSolutionStep()
 
+		if self.DoRemeshing and is_remeshing:
+			self.GenerateDemAfterRemeshing()
+
+
 
 		# just for testing ->Remove
-		#self.FEM_Solution.GraphicalOutputPrintOutput()
+		self.FEM_Solution.GraphicalOutputPrintOutput()
 		# *********************** 
 
 
@@ -145,9 +148,6 @@ class FEMDEM_Solution:
 
 		# Extrapolate the VonMises normalized stress to nodes (remeshing)
 		KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-
-		KratosFemDem.DemAfterRemeshIdentificatorProcess(self.FEM_Solution.main_model_part).Execute()
-
 		Wait()
 
 		self.DEM_Solution.InitializeTimeStep()
@@ -589,30 +589,23 @@ class FEMDEM_Solution:
 		for Element in FEM_Elements:
 
 			is_active = True
-
 			if Element.IsDefined(KratosMultiphysics.ACTIVE):
 				is_active = Element.Is(KratosMultiphysics.ACTIVE)
-
 			if is_active == True:
-
 				for i in range(0,3): # Loop over nodes of the element
 					node = Element.GetNodes()[i]
 					NumberOfActiveElements = node.GetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS)
 					NumberOfActiveElements += 1
 					node.SetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS, NumberOfActiveElements)
 
-
 		NumberOfActiveElements = 0
 		for node in FEM_Nodes:
 			NumberOfActiveElements = node.GetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS)
 
 			if NumberOfActiveElements == 0 and node.GetValue(KratosFemDem.INACTIVE_NODE) == False:
-
 				Id = node.Id
 				node.SetValue(KratosFemDem.INACTIVE_NODE, True)
 				node.Set(KratosMultiphysics.TO_ERASE, True) # added
-				#print("nodo eliminado ", Id)
-
 				DEMnode = self.SpheresModelPart.GetNode(Id)
 				DEMnode.SetValue(KratosFemDem.INACTIVE_NODE, True)
 				DEMnode.Set(KratosMultiphysics.TO_ERASE, True)
@@ -815,9 +808,25 @@ class FEMDEM_Solution:
 #============================================================================================================================
 
 	def GenerateDemAfterRemeshing(self):
-		pass
+		
+		# we extrapolate the damage to the nodes
+		KratosFemDem.DamageToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
 
-	
+		# we create a submodelpart containing the nodes and radius of the corresponding DEM
+		KratosFemDem.DemAfterRemeshIdentificatorProcess(self.FEM_Solution.main_model_part).Execute()
+
+		# Loop over the elements of the Submodelpart to create the DEM
+		for node in self.FEM_Solution.main_model_part.GetSubModelPart("DemAfterRemeshingNodes").Nodes:
+
+			Id = node.Id
+			R = node.GetValue(KratosFemDem.DEM_RADIUS)
+			Coordinates = self.GetNodeCoordinates(node)
+			self.ParticleCreatorDestructor.FEMDEM_CreateSphericParticle(Coordinates, R, Id)
+			node.SetValue(KratosFemDem.IS_DEM, True)
+
+		self.PrintDEMResults()
+		Wait()
+
 #============================================================================================================================		
 
 	def CheckIfHasRemeshed(self):
@@ -834,7 +843,6 @@ class FEMDEM_Solution:
 						is_remeshed = True
 
 		return is_remeshed
-
 
 #============================================================================================================================		
 
