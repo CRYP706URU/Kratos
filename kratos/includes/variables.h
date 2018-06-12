@@ -413,11 +413,6 @@ namespace Kratos
     //for Structural application:
     KRATOS_DEFINE_VARIABLE( Matrix, INERTIA )
 
-    // for FEMDEM App
-    KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(POINT_LOAD)
-    KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(LINE_LOAD)
-    KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(SURFACE_LOAD)
-
     //for General kratos application:
 
     //for Structural application:

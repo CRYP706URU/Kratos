@@ -146,3 +146,19 @@ Wait()
 				print(str(elem.Id) + "  no node 55  " + str(elem.GetNodes()[0].Id)+ " " + str(elem.GetNodes()[1].Id)+ " " + str(elem.GetNodes()[2].Id))
 		Wait() 
 		# just for debug
+
+
+				#Wait()
+		'''print("nodos fijados...")
+		for node in self.FEM_Solution.main_model_part.Nodes:
+			if node.IsFixed(KratosMultiphysics.DISPLACEMENT_X) == True:
+				print(node.Id, node.IsFixed(KratosMultiphysics.DISPLACEMENT_X))'''
+
+		'''for node in self.FEM_Solution.main_model_part.GetSubModelPart("Solid_Displacement-auto-1").Nodes:
+			print(node.Id)'''
+
+
+		#print(self.FEM_Solution.main_model_part.GetSubModelPart("Solid_Displacement-auto-1"))
+		'''for node in self.FEM_Solution.main_model_part.GetSubModelPart("Solid_Displacement-auto-1").Nodes:
+			print(node.Id)
+		Wait()'''

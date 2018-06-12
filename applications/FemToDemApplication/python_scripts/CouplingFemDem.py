@@ -9,7 +9,6 @@ import KratosMultiphysics.FemToDemApplication   as KratosFemDem
 import KratosMultiphysics.MeshingApplication as MeshingApplication
 import math
 import os
-
 import mmg_process as MMG
 
 def Wait():
@@ -62,6 +61,7 @@ class FEMDEM_Solution:
 			self.InitializeMMGvariables()
 			self.RemeshingProcessMMG.ExecuteInitialize()
 
+
 #============================================================================================================================
 	def RunMainTemporalLoop(self):
 
@@ -95,36 +95,33 @@ class FEMDEM_Solution:
 			# Perform remeshing
 			self.RemeshingProcessMMG.ExecuteInitializeSolutionStep()
 
-			#print(is_remeshing)
-			#print(self.FEM_Solution.main_model_part.GetSubModelPart("Body_Part-auto-1"))
-			#print(self.FEM_Solution.main_model_part)
-			#Wait()
-
 			if is_remeshing:
 				# Remove DEMS from previous mesh
 				self.SpheresModelPart.Elements.clear()
 				self.SpheresModelPart.Nodes.clear()
-				
-				# Initialize processes after remeshing
-				#self.FEM_Solution.solver.Clear()
-				#self.FEM_Solution.solver.Initialize()
+
 				self.InitializeMMGvariables()
 				self.FEM_Solution.model_processes = self.FEM_Solution.AddProcesses()
 				self.FEM_Solution.model_processes.ExecuteInitialize()
 				self.FEM_Solution.model_processes.ExecuteBeforeSolutionLoop()
 				self.FEM_Solution.model_processes.ExecuteInitializeSolutionStep()
 
-		#Wait()
 		self.FEM_Solution.InitializeSolutionStep()
 
+		'''self.create_initial_dem_skin = True  # Hard Coded TODO
+		if self.create_initial_dem_skin and self.FEM_Solution.step == 1:
+			self.CreateInitialSkinDEM()
+
 		if self.DoRemeshing and is_remeshing:
-			self.GenerateDemAfterRemeshing()
+			self.GenerateDemAfterRemeshing()'''
 
 
 
 		# just for testing ->Remove
-		self.FEM_Solution.GraphicalOutputPrintOutput()
+		#self.FEM_Solution.GraphicalOutputPrintOutput()
 		# *********************** 
+		#KratosMultiphysics.ModelPartIO("MDPA_Vicente_step_" + str(self.FEM_Solution.step), KratosMultiphysics.IO.WRITE).WriteModelPart(self.FEM_Solution.main_model_part)
+
 
 
 
@@ -584,7 +581,6 @@ class FEMDEM_Solution:
 
 		FEM_Elements = self.FEM_Solution.main_model_part.Elements
 		FEM_Nodes    = self.FEM_Solution.main_model_part.Nodes
-		#DEM_Nodes    = self.SpheresModelPart
 
 		for Element in FEM_Elements:
 
@@ -604,11 +600,14 @@ class FEMDEM_Solution:
 
 			if NumberOfActiveElements == 0 and node.GetValue(KratosFemDem.INACTIVE_NODE) == False:
 				Id = node.Id
+				print("nodo eliminado", Id)
+				Wait()
 				node.SetValue(KratosFemDem.INACTIVE_NODE, True)
 				node.Set(KratosMultiphysics.TO_ERASE, True) # added
 				DEMnode = self.SpheresModelPart.GetNode(Id)
 				DEMnode.SetValue(KratosFemDem.INACTIVE_NODE, True)
 				DEMnode.Set(KratosMultiphysics.TO_ERASE, True)
+
 
 			# Reset the value to the next step
 			node.SetValue(KratosFemDem.NUMBER_OF_ACTIVE_ELEMENTS, 0)
@@ -633,10 +632,6 @@ class FEMDEM_Solution:
 			self.FEM_Solution.main_model_part.GetNode(Id).SetValue(KratosFemDem.NODAL_FORCE_X, Force_X)
 			self.FEM_Solution.main_model_part.GetNode(Id).SetValue(KratosFemDem.NODAL_FORCE_Y, Force_Y)
 
-
-#============================================================================================================================
-	def CreateInitialSkinDEM(self):
-		pass
 
 #============================================================================================================================
 	def WritePostListFile(self):
@@ -824,8 +819,8 @@ class FEMDEM_Solution:
 			self.ParticleCreatorDestructor.FEMDEM_CreateSphericParticle(Coordinates, R, Id)
 			node.SetValue(KratosFemDem.IS_DEM, True)
 
-		self.PrintDEMResults()
-		Wait()
+		#self.PrintDEMResults()
+		#Wait()
 
 #============================================================================================================================		
 
@@ -858,3 +853,31 @@ class FEMDEM_Solution:
 
 				self.DEM_Solution.PrintResultsForGid(self.DEM_Solution.time)
 				self.DEM_Solution.time_old_print = self.DEM_Solution.time
+
+
+#============================================================================================================================
+	def CreateInitialSkinDEM(self):
+
+		# Search the skin nodes for the remeshing
+		'''skin_detection_process_param = KratosMultiphysics.Parameters("""
+        {
+			"name_auxiliar_model_part" : "SkinDEMModelPart",
+			"name_auxiliar_condition"  : "Condition",
+			"echo_level"               : 0
+        }""")
+
+		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.FEM_Solution.main_model_part,
+		                                                                   skin_detection_process_param)
+		skin_detection_process.Execute()'''
+
+		initial_dem_skin_process = KratosFemDem.InitialDemSkinProcess(self.FEM_Solution.main_model_part)
+		initial_dem_skin_process.Execute()
+
+		# Loop over the elements of the Submodelpart to create the DEM
+		for node in self.FEM_Solution.main_model_part.GetSubModelPart("InitialDemSkin").Nodes:
+
+			Id = node.Id
+			R = node.GetValue(KratosFemDem.DEM_RADIUS)
+			Coordinates = self.GetNodeCoordinates(node)
+			self.ParticleCreatorDestructor.FEMDEM_CreateSphericParticle(Coordinates, R, Id)
+			node.SetValue(KratosFemDem.IS_DEM, True)

@@ -16,8 +16,8 @@
 
 // Project includes
 
-#if !defined(KRATOS_DEM_AFTER_REMESH_IDENTIFICATOR_PROCESS_HPP_INCLUDED )
-#define  KRATOS_DEM_AFTER_REMESH_IDENTIFICATOR_PROCESS_HPP_INCLUDED
+#if !defined(KRATOS_INITIAL_DEM_SKIN_PROCESS_HPP_INCLUDED )
+#define  KRATOS_INITIAL_DEM_SKIN_PROCESS_HPP_INCLUDED
 
 #include "processes/process.h"
 #include "includes/model_part.h"
@@ -26,14 +26,14 @@
 namespace Kratos
 {
 
-class  DemAfterRemeshIdentificatorProcess : public Process
+class  InitialDemSkinProcess : public Process
 {
 public:
 
-    KRATOS_CLASS_POINTER_DEFINITION(DemAfterRemeshIdentificatorProcess);
+    KRATOS_CLASS_POINTER_DEFINITION(InitialDemSkinProcess);
 
     // Constructor
-    DemAfterRemeshIdentificatorProcess(ModelPart& rModelPart)
+    InitialDemSkinProcess(ModelPart& rModelPart)
         : mrModelPart(rModelPart)
     {
     }
@@ -42,7 +42,7 @@ public:
     The modelpart must include the skinModelpart and damage extrapolated to nodes*/
     void Execute()
     {
-        const std::string& name_dem_model_part = "DemAfterRemeshingNodes";
+        const std::string& name_dem_model_part = "InitialDemSkin";
 
         if (mrModelPart.HasSubModelPart(name_dem_model_part)) {
             mrModelPart.RemoveSubModelPart(name_dem_model_part);
@@ -53,11 +53,8 @@ public:
         ModelPart::Pointer p_skin_model_part = mrModelPart.pGetSubModelPart("SkinDEMModelPart");
 
         for (ModelPart::NodeIterator it = (*p_skin_model_part).NodesBegin(); it != (*p_skin_model_part).NodesEnd(); ++it) {
-            const double& nodal_damage = it->GetSolutionStepValue(NODAL_DAMAGE);
-            if (nodal_damage > 0.94) {
-                p_auxiliar_model_part->AddNode(*(it.base()));
-            }
-        } // DemAfterRemeshingNodes SubModelPart Filled with nodes
+            p_auxiliar_model_part->AddNode(*(it.base()));
+        } // InitialDemSkin SubModelPart Filled with nodes
 
         // Let's assign the DEM radius to those nodes...
         Process& neighbour_finder = FindNodalNeighboursProcess(mrModelPart, 4, 4);

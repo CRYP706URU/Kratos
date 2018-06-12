@@ -267,6 +267,8 @@ class FEM_Solution(MainSolidFEM.Solution):
 		                                                                   skin_detection_process_param)
 		skin_detection_process.Execute()
 
+
+
 		#print(self.main_model_part.GetSubModelPart("SkinDEMModelPart"))
 		'''for node in self.main_model_part.GetSubModelPart("SkinDEMModelPart").Nodes:
 			print(node.Id)
