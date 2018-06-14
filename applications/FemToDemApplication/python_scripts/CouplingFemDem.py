@@ -145,7 +145,6 @@ class FEMDEM_Solution:
 
 		# Extrapolate the VonMises normalized stress to nodes (remeshing)
 		KratosFemDem.StressToNodesProcess(self.FEM_Solution.main_model_part, 2).Execute()
-		Wait()
 
 		self.DEM_Solution.InitializeTimeStep()
 		self.DEM_Solution.time = self.FEM_Solution.time
@@ -207,7 +206,10 @@ class FEMDEM_Solution:
 			self.RemeshingProcessMMG.ExecuteFinalizeSolutionStep()
 
 		# Remove the submodel to be recomputed at each dt
-		self.FEM_Solution.main_model_part.RemoveSubModelPart("SkinDEMModelPart")
+		'''for cond in self.FEM_Solution.main_model_part.GetSubModelPart("SkinDEMModelPart").Conditions:
+			cond.Set(KratosMultiphysics.TO_ERASE)
+		self.FEM_Solution.main_model_part.RemoveConditionsFromAllLevels(KratosMultiphysics.TO_ERASE)
+		self.FEM_Solution.main_model_part.RemoveSubModelPart("SkinDEMModelPart")'''
 
 		
 #============================================================================================================================

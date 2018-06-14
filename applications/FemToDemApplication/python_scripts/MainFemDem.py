@@ -235,6 +235,18 @@ class FEM_Solution(MainSolidFEM.Solution):
 				                                                                           self.problem_path)
 			self.activate_AMR = self.AMR_util.Initialize() # check the amr criteria'''
 
+		# Search the skin nodes for the remeshing TO BE REMOVED TODO
+		skin_detection_process_param = KratosMultiphysics.Parameters("""
+        {
+			"name_auxiliar_model_part" : "SkinDEMModelPart",
+			"name_auxiliar_condition"  : "Condition",
+			"echo_level"               : 0
+        }""")
+
+		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part,
+		                                                                   skin_detection_process_param)
+		skin_detection_process.Execute()
+
 
 #============================================================================================================================
 	def RunMainTemporalLoop(self):
@@ -256,7 +268,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 		neighbour_elemental_finder.Execute()
 
 		# Search the skin nodes for the remeshing
-		skin_detection_process_param = KratosMultiphysics.Parameters("""
+		'''skin_detection_process_param = KratosMultiphysics.Parameters("""
         {
 			"name_auxiliar_model_part" : "SkinDEMModelPart",
 			"name_auxiliar_condition"  : "Condition",
@@ -265,17 +277,7 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part,
 		                                                                   skin_detection_process_param)
-		skin_detection_process.Execute()
-
-
-
-		#print(self.main_model_part.GetSubModelPart("SkinDEMModelPart"))
-		'''for node in self.main_model_part.GetSubModelPart("SkinDEMModelPart").Nodes:
-			print(node.Id)
-			print(node.GetSolutionStepValue(KratosMultiphysics.DISPLACEMENT))
-		print("skin process executed")
-		Wait()'''
-
+		skin_detection_process.Execute()'''
 
 		print(" [STEP:",self.step," TIME:", self.time,"]")
 
@@ -311,43 +313,6 @@ class FEM_Solution(MainSolidFEM.Solution):
 
 		# processes to be executed after witting the output
 		self.model_processes.ExecuteAfterOutputStep()
-
-
-		'''if(self.activate_AMR):
-			self.refine, self.last_mesh = self.AMR_util.CheckAMR(self.time)
-			
-			if(self.refine):
-				self.main_model_part, self.solver = self.AMR_util.Execute(self.main_model_part,
-					                                                      self.solver,
-					                                                      self.gid_output_util,
-					                                                      self.time,
-					                                                      self.current_id)
-
-				# save print parameters
-				printed_step_count = self.graphical_output.printed_step_count
-				step_count = self.graphical_output.step_count
-
-				#construct the new solver (main setting methods are located in the solver_module)
-				#self.ProjectParameters["solver_settings"].RemoveValue("damp_factor_m")
-				#self.ProjectParameters["solver_settings"].RemoveValue("dynamic_factor")
-
-				#solver_module = __import__(self.ProjectParameters["solver_settings"]["solver_type"].GetString())
-				#self.solver   = solver_module.CreateSolver(self.main_model_part, self.ProjectParameters["solver_settings"])
-				self.InitializeAfterAMR()
-
-				# assign print parameters
-				self.graphical_output.printed_step_count = printed_step_count
-				self.graphical_output.step_count = step_count
-
-				# test
-				
-				#print("antes de imprimir")
-				#Wait()
-				# just to to see what's has been mapped
-				#self.GraphicalOutputPrintOutput()	
-			elif(self.last_mesh):
-				self.AMR_util.Finalize(self.main_model_part, self.current_id)'''
-
 
 
 
