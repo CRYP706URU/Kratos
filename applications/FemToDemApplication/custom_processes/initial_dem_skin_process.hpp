@@ -37,6 +37,7 @@ public:
         : mrModelPart(rModelPart)
     {
     }
+    
     /* It will create a submodel part containing nodes to include DEM on them,
     with the DEM radius assigned to each node to be created the DEM afterwards
     The modelpart must include the skinModelpart and damage extrapolated to nodes*/

@@ -206,10 +206,10 @@ class FEMDEM_Solution:
 			self.RemeshingProcessMMG.ExecuteFinalizeSolutionStep()
 
 		# Remove the submodel to be recomputed at each dt
-		'''for cond in self.FEM_Solution.main_model_part.GetSubModelPart("SkinDEMModelPart").Conditions:
-			cond.Set(KratosMultiphysics.TO_ERASE)
-		self.FEM_Solution.main_model_part.RemoveConditionsFromAllLevels(KratosMultiphysics.TO_ERASE)
-		self.FEM_Solution.main_model_part.RemoveSubModelPart("SkinDEMModelPart")'''
+		# for cond in self.FEM_Solution.main_model_part.GetSubModelPart("SkinDEMModelPart").Conditions:
+		# 	cond.Set(KratosMultiphysics.TO_ERASE)
+		# self.FEM_Solution.main_model_part.RemoveConditionsFromAllLevels(KratosMultiphysics.TO_ERASE)
+		# self.FEM_Solution.main_model_part.RemoveSubModelPart("SkinDEMModelPart")
 
 		
 #============================================================================================================================

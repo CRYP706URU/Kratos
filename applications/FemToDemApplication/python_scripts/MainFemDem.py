@@ -206,34 +206,8 @@ class FEM_Solution(MainSolidFEM.Solution):
 		self.end_time   = self.ProjectParameters["problem_data"]["end_time"].GetDouble()
 		self.delta_time = self.ProjectParameters["problem_data"]["time_step"].GetDouble()
 
-		'''
-		###   ------  Initializing Adaptive Mesh Refinement  ----------####
-		self.cleaning_util = cleaning_utility.CleaningUtility(self.problem_path)
-
-		self.gid_output_util = gid_output_utility.GidOutputUtility(self.ProjectParameters,
-			                                                       self.problem_name,
-			                                                       self.start_time,
-			                                                       self.end_time,
-			                                                       self.delta_time)
-
-		self.constitutive_law_utility = []  # must be changed->provisional TODO
-		self.conditions_util = []
 
 
-
-		self.activate_AMR = self.ProjectParameters["AMR_data"]["activate_AMR"].GetBool()
-		self.current_id = 1
-
-		# Initialize the AMR_util
-		if(self.activate_AMR):
-			self.AMR_util = adaptive_mesh_refinement_utility.AdaptiveMeshRefinementUtility(self.ProjectParameters,
-				                                                                           self.start_time,
-				                                                                           self.solver,
-				                                                                           self.constitutive_law_utility,
-				                                                                           gid_output_utility,
-				                                                                           self.conditions_util,
-				                                                                           self.problem_path)
-			self.activate_AMR = self.AMR_util.Initialize() # check the amr criteria'''
 
 		# Search the skin nodes for the remeshing TO BE REMOVED TODO
 		skin_detection_process_param = KratosMultiphysics.Parameters("""
@@ -268,16 +242,16 @@ class FEM_Solution(MainSolidFEM.Solution):
 		neighbour_elemental_finder.Execute()
 
 		# Search the skin nodes for the remeshing
-		'''skin_detection_process_param = KratosMultiphysics.Parameters("""
-        {
-			"name_auxiliar_model_part" : "SkinDEMModelPart",
-			"name_auxiliar_condition"  : "Condition",
-			"echo_level"               : 0
-        }""")
+		# skin_detection_process_param = KratosMultiphysics.Parameters("""
+        # {
+		# 	"name_auxiliar_model_part" : "SkinDEMModelPart",
+		# 	"name_auxiliar_condition"  : "Condition",
+		# 	"echo_level"               : 0
+        # }""")
 
-		skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part,
-		                                                                   skin_detection_process_param)
-		skin_detection_process.Execute()'''
+		# skin_detection_process = KratosMultiphysics.SkinDetectionProcess2D(self.main_model_part,
+		#                                                                    skin_detection_process_param)
+		# skin_detection_process.Execute()
 
 		print(" [STEP:",self.step," TIME:", self.time,"]")
 

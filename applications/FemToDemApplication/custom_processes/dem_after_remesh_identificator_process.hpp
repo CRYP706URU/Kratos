@@ -37,6 +37,7 @@ public:
         : mrModelPart(rModelPart)
     {
     }
+    
     /* It will create a submodel part containing nodes to include DEM on them,
     with the DEM radius assigned to each node to be created the DEM afterwards
     The modelpart must include the skinModelpart and damage extrapolated to nodes*/
@@ -53,10 +54,13 @@ public:
         ModelPart::Pointer p_skin_model_part = mrModelPart.pGetSubModelPart("SkinDEMModelPart");
 
         for (ModelPart::NodeIterator it = (*p_skin_model_part).NodesBegin(); it != (*p_skin_model_part).NodesEnd(); ++it) {
+
             const double& nodal_damage = it->GetSolutionStepValue(NODAL_DAMAGE);
+
             if (nodal_damage > 0.94) {
                 p_auxiliar_model_part->AddNode(*(it.base()));
             }
+
         } // DemAfterRemeshingNodes SubModelPart Filled with nodes
 
         // Let's assign the DEM radius to those nodes...
@@ -76,6 +80,7 @@ public:
                 if (rneigh[i].GetValue(DEM_RADIUS) != 0.0) {
                     radius_dem = distance - rneigh[i].GetValue(DEM_RADIUS);
                     radius_is_dems.push_back(radius_dem);
+
                 } else {
                     radius_dem = 0.5 * distance;
                     radius_not_dem.push_back(radius_dem);
@@ -84,6 +89,7 @@ public:
             if (radius_is_dems.size() == 0) {
                 min_radius = this->GetMinimumValue(radius_not_dem);
                 (*it).SetValue(DEM_RADIUS, min_radius);
+
             } else {
 
 				if (radius_is_dems.size() != 0) min_radius_is_dem = this->GetMinimumValue(radius_is_dems);
