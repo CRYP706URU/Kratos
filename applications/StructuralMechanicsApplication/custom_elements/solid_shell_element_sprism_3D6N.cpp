@@ -61,19 +61,19 @@ SolidShellElementSprism3D6N::SolidShellElementSprism3D6N(IndexType NewId, Geomet
 {
     mFinalizedStep = true; // the creation is out of the time step, it must be true
 
-    if( GetProperties().Has(NINT_TRANS) ) {
-        if (GetProperties()[NINT_TRANS] == 2) {
+    if( GetProperties().Has(NUMBER_TRANSVERSAL_INTEGRATION_POINTS) ) {
+        if (GetProperties()[NUMBER_TRANSVERSAL_INTEGRATION_POINTS] == 2) {
             mThisIntegrationMethod = GeometryData::GI_EXTENDED_GAUSS_1;
-        } else if (GetProperties()[NINT_TRANS] == 3) {
+        } else if (GetProperties()[NUMBER_TRANSVERSAL_INTEGRATION_POINTS] == 3) {
             mThisIntegrationMethod = GeometryData::GI_EXTENDED_GAUSS_2;
-        } else if (GetProperties()[NINT_TRANS] == 5) {
+        } else if (GetProperties()[NUMBER_TRANSVERSAL_INTEGRATION_POINTS] == 5) {
             mThisIntegrationMethod = GeometryData::GI_EXTENDED_GAUSS_3;
-        } else if (GetProperties()[NINT_TRANS] == 7) {
+        } else if (GetProperties()[NUMBER_TRANSVERSAL_INTEGRATION_POINTS] == 7) {
             mThisIntegrationMethod = GeometryData::GI_EXTENDED_GAUSS_4;
-        } else if (GetProperties()[NINT_TRANS] == 11) {
+        } else if (GetProperties()[NUMBER_TRANSVERSAL_INTEGRATION_POINTS] == 11) {
             mThisIntegrationMethod = GeometryData::GI_EXTENDED_GAUSS_5;
         } else {
-            KRATOS_INFO("SolidShellElementSprism3D6N") << "The number of integration points is not defined.  NINT_TRANS: "<< GetProperties()[NINT_TRANS] << "\nOptions are: 2, 3, 5, 7, 11  " << "\nTaking default number of integration points (NINT_TRANS = 2)  " << std::endl;
+            KRATOS_INFO("SolidShellElementSprism3D6N") << "The number of integration points is not defined.  NUMBER_TRANSVERSAL_INTEGRATION_POINTS: "<< GetProperties()[NUMBER_TRANSVERSAL_INTEGRATION_POINTS] << "\nOptions are: 2, 3, 5, 7, 11  " << "\nTaking default number of integration points (NINT_TRANS = 2)  " << std::endl;
             mThisIntegrationMethod = GeometryData::GI_EXTENDED_GAUSS_2;
         }
     } else {
@@ -1625,20 +1625,20 @@ void SolidShellElementSprism3D6N::Initialize()
         mConstitutiveLawVector.resize( integration_points.size() );
 
     /* Implicit or explicit EAS update */
-    if( GetProperties().Has(EAS_IMP) )
-        mELementalFlags.Set(SolidShellElementSprism3D6N::EAS_IMPLICIT_EXPLICIT, GetProperties()[EAS_IMP]);
+    if( GetProperties().Has(CONSIDER_IMPLICIT_EAS_SPRISM_ELEMENT) )
+        mELementalFlags.Set(SolidShellElementSprism3D6N::EAS_IMPLICIT_EXPLICIT, GetProperties()[CONSIDER_IMPLICIT_EAS_SPRISM_ELEMENT]);
     else
         mELementalFlags.Set(SolidShellElementSprism3D6N::EAS_IMPLICIT_EXPLICIT, true);
 
     /* Total or updated lagrangian */
-    if( GetProperties().Has(SPRISM_TL_UL) )
-        mELementalFlags.Set(SolidShellElementSprism3D6N::TOTAL_UPDATED_LAGRANGIAN, GetProperties()[SPRISM_TL_UL]);
+    if( GetProperties().Has(CONSIDER_TOTAL_LAGRANGIAN_SPRISM_ELEMENT) )
+        mELementalFlags.Set(SolidShellElementSprism3D6N::TOTAL_UPDATED_LAGRANGIAN, GetProperties()[CONSIDER_TOTAL_LAGRANGIAN_SPRISM_ELEMENT]);
     else
         mELementalFlags.Set(SolidShellElementSprism3D6N::TOTAL_UPDATED_LAGRANGIAN, true);
 
     /* Quadratic or linear element */
-    if( GetProperties().Has(QUAD_ON) )
-        mELementalFlags.Set(SolidShellElementSprism3D6N::QUADRATIC_ELEMENT, GetProperties()[QUAD_ON]);
+    if( GetProperties().Has(CONSIDER_QUADRATIC_SPRISM_ELEMENT) )
+        mELementalFlags.Set(SolidShellElementSprism3D6N::QUADRATIC_ELEMENT, GetProperties()[CONSIDER_QUADRATIC_SPRISM_ELEMENT]);
     else
         mELementalFlags.Set(SolidShellElementSprism3D6N::QUADRATIC_ELEMENT, true);
 
