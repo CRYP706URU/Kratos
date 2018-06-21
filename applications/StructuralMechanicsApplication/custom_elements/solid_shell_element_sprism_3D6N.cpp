@@ -3050,7 +3050,7 @@ void SolidShellElementSprism3D6N::CalculateAndAddShearKgeometric(
 
 void SolidShellElementSprism3D6N::CalculateAndAddBNormal(
     BoundedMatrix<double, 1, 18 > & BNormal,
-    double & CNormal,
+    double& CNormal,
     const BoundedMatrix<double, 6, 1 > & TransversalCartesianDerivativesCenter,
     const array_1d<double, 3 > & TransversalDeformationGradientF
     )
@@ -3944,6 +3944,18 @@ void SolidShellElementSprism3D6N::InitializeGeneralVariables(GeneralVariables& r
         this->CalculateDeltaPosition(delta_position);
         rVariables.J = GetGeometry().Jacobian( rVariables.J, mThisIntegrationMethod, delta_position);
     }
+
+    // Computing gradient
+    const IndexType integration_point_number = GetGeometry().IntegrationPointsNumber( mThisIntegrationMethod );
+    GeometryType::ShapeFunctionsGradientsType DN_DX(integration_point_number, ZeroMatrix(6, 3));
+    const GeometryType::ShapeFunctionsGradientsType& DN_De = GetGeometry().ShapeFunctionsLocalGradients(mThisIntegrationMethod);
+    double detJ;
+    Matrix inv_j;
+    for (IndexType i_point = 0; i_point < integration_point_number; ++i_point) {
+        MathUtils<double>::InvertMatrix( rVariables.j[i_point], inv_j, detJ );
+        noalias(DN_DX[i_point]) = prod(DN_De[i_point], inv_j);
+    }
+    rVariables.SetShapeFunctionsGradients(DN_DX);
 }
 
 /***********************************************************************************/
